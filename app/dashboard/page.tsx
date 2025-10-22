@@ -189,7 +189,7 @@ export default function DashboardPage() {
 // Se você já tiver o skeleton.tsx pelo shadcn, ignore esta parte.
 // Verifique se falta: npx shadcn@latest add skeleton
 // Se for adicionar, crie o arquivo components/ui/skeleton.tsx e cole:
-/*
+
 import { cn } from "@/lib/utils"
 
 function Skeleton({
@@ -205,4 +205,3 @@ function Skeleton({
 }
 
 export { Skeleton }
-*/
