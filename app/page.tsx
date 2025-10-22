@@ -1,65 +1,136 @@
-import Image from "next/image";
+// Caminho do arquivo: src/app/page.tsx
+'use client' // Diretiva importante: indica que este é um componente interativo
 
-export default function Home() {
+import { useState } from 'react'
+import { createClient } from '@/utils/supabase/client' // Importa nosso cliente
+
+export default function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
+
+  const supabase = createClient() // Inicializa o Supabase
+
+  // Função para lidar com o login (Sign In)
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault() // Impede o recarregamento da página
+    setError(null)
+    setMessage(null)
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password,
+    })
+
+    if (error) {
+      setError(error.message)
+    } else {
+      setMessage('Login bem-sucedido! Redirecionando...')
+      // No futuro, faremos o redirecionamento aqui
+      window.location.href = '/dashboard' // Redireciona para a página principal
+    }
+  }
+
+  // Função para lidar com o cadastro (Sign Up)
+  // Nota: Você precisará cadastrar seus 4 usuários manualmente
+  // ou usar esta função temporariamente.
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setMessage(null)
+
+    const { data, error } = await supabase.auth.signUp({
+      email: email,
+      password: password,
+    })
+
+    if (error) {
+      setError(error.message)
+    } else {
+      setMessage('Usuário cadastrado! Verifique seu e-mail para confirmação.')
+    }
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-xl">
+        <h1 className="mb-6 text-center text-3xl font-bold text-gray-800">
+          SGCO
+        </h1>
+        <p className="mb-6 text-center text-gray-600">
+          Sistema de Gerenciamento de Créditos Orçamentários
+        </p>
+        
+        <form onSubmit={handleSignIn}>
+          <div className="mb-4">
+            <label 
+              htmlFor="email" 
+              className="mb-2 block text-sm font-medium text-gray-700"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full rounded-md border border-gray-300 p-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              placeholder="seu.email@orgao.gov.br"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </div>
+          
+          <div className="mb-6">
+            <label 
+              htmlFor="password" 
+              className="mb-2 block text-sm font-medium text-gray-700"
+            >
+              Senha
+            </label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full rounded-md border border-gray-300 p-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              placeholder="••••••••"
+            />
+          </div>
+          
+          {error && (
+            <div className="mb-4 rounded-md bg-red-100 p-3 text-center text-red-700">
+              {error}
+            </div>
+          )}
+          {message && (
+            <div className="mb-4 rounded-md bg-green-100 p-3 text-center text-green-700">
+              {message}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className="w-full rounded-md bg-blue-600 p-3 text-white shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
-            Documentation
-          </a>
-        </div>
-      </main>
+            Entrar
+          </button>
+        </form>
+
+        {/* Botão de Cadastro (Sign Up) 
+          Mantenha-o comentado (ou remova) se for cadastrar usuários
+          diretamente no painel do Supabase.
+        */}
+        {/*
+        <p className="mt-4 text-center text-sm text-gray-600">
+          Não tem conta?
+          <button onClick={handleSignUp} className="ml-1 font-medium text-blue-600 hover:underline">
+            Cadastrar (Teste)
+          </button>
+        </p>
+        */}
+      </div>
     </div>
-  );
+  )
 }
