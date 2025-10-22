@@ -117,7 +117,7 @@ export function AddNcForm({ onSuccess, onCancel }: AddNcFormProps) {
         console.error("Erro ao processar ou inserir NC:", error);
         // Se for erro de validação do processedSchema (pouco provável aqui, mas possível)
         if (error instanceof z.ZodError) {
-             setSubmitError(`Erro de validação interna: ${error.errors.map(e => e.message).join(', ')}`);
+             setSubmitError(`Erro de validação interna: ${error.issues.map(e => e.message).join(', ')}`); // <-- CORRIGIDO AQUI
         } else {
              setSubmitError(`Erro ao salvar: ${error.message || 'Erro desconhecido'}`);
         }
