@@ -74,7 +74,9 @@ const config = {
       },
     },
   },
+  /* eslint-disable @typescript-eslint/no-require-imports */
   plugins: [require("tailwindcss-animate")], // Verifique se esta dependência está instalada
+  /* eslint-enable @typescript-eslint/no-require-imports */
 }
 
 module.exports = config

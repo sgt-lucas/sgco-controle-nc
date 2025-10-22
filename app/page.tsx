@@ -62,13 +62,13 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSignIn}>
             <div className="grid w-full items-center gap-4">
-              {/* Campo de Usuário Atualizado */}
+              
               <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="username">Usuário</Label> {/* <- Label Atualizada */}
+                <Label htmlFor="username">Usuário</Label>
                 <Input
                   id="username"
                   type="text" // <- Mudado de 'email' para 'text'
-                  placeholder="Seu nome de usuário" {/* <- Placeholder Atualizado */}
+                  placeholder="Seu nome de usuário"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
