@@ -10,7 +10,7 @@ const roboto = Roboto({
 
 // Branding atualizado
 export const metadata: Metadata = {
-  title: "2º GEO - SALC",
+  title: "2º CGEO - SALC",
   description: "2º Centro de Geoinformação - SALC",
 };
 
