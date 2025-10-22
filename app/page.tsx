@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 // Defina o sufixo do domínio fictício aqui para consistência
-const DOMAIN_SUFFIX = '@2cgeo.local';
+const DOMAIN_SUFFIX = '@salc.com';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('')
