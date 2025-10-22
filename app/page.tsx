@@ -1,8 +1,8 @@
-// Caminho do arquivo: app/page.tsx (Atualizado para Usuário/Senha)
+// Caminho do arquivo: app/page.tsx (Atualizado com Sufixo de Domínio)
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client' // Caminho correto
+import { createClient } from '@/lib/supabase/client'
 
 import { Button } from "@/components/ui/button"
 import {
@@ -15,8 +15,10 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+// Defina o sufixo do domínio fictício aqui para consistência
+const DOMAIN_SUFFIX = '@2cgeo.local';
+
 export default function LoginPage() {
-  // Estado renomeado de 'email' para 'username'
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -31,16 +33,17 @@ export default function LoginPage() {
     setMessage(null)
     setLoading(true)
 
-    // Passa o 'username' do estado para o campo 'email' esperado pelo Supabase
+    // *** MUDANÇA PRINCIPAL: Adiciona o sufixo ao nome de usuário ***
+    const emailWithSuffix = `${username}${DOMAIN_SUFFIX}`;
+
     const { error } = await supabase.auth.signInWithPassword({
-      email: username, // <- Mudança aqui
+      email: emailWithSuffix, // <- Envia o usuário com o sufixo
       password: password,
     })
 
     if (error) {
-      // Mensagem de erro genérica para não vazar se o usuário existe ou não
       setError('Usuário ou senha inválidos.')
-      console.error("Erro de login:", error.message) // Log detalhado no console do navegador
+      console.error("Erro de login:", error.message)
     } else {
       setMessage('Login bem-sucedido! Redirecionando...')
       window.location.href = '/dashboard'
@@ -62,19 +65,19 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSignIn}>
             <div className="grid w-full items-center gap-4">
-              
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="username">Usuário</Label>
                 <Input
                   id="username"
-                  type="text" // <- Mudado de 'email' para 'text'
+                  type="text"
                   placeholder="Seu nome de usuário"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  // Impede o usuário de digitar "@" no campo de usuário
+                  onKeyDown={(e) => { if (e.key === '@') e.preventDefault(); }}
                   required
                 />
               </div>
-              {/* Campo de Senha (sem alterações) */}
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="password">Senha</Label>
                 <Input
