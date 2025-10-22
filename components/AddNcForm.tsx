@@ -29,7 +29,12 @@ const formSchema = z.object({
   naturezadespesa: z.string().min(6, { message: "ND é obrigatória."}), // Ex: 339030
   fonterecurso: z.string().min(1, { message: "Fonte é obrigatória."}),
   pi: z.string().optional(), // PI é opcional
-  valortotal: z.coerce.number().positive({ message: "Valor deve ser positivo." }), // Coerce converte string para número
+  // --- Linha Corrigida ---
+  valortotal: z.preprocess(
+      (val) => (val === "" ? undefined : Number(val)), // Converte string vazia/undefined para NaN ou número
+      z.number({ invalid_type_error: "Valor inválido."}).positive({ message: "Valor deve ser positivo." })
+  ),
+  // ----------------------
   datavalidade: z.string().date("Data inválida.").optional().or(z.literal('')), // Opcional, aceita vazio
 });
 
