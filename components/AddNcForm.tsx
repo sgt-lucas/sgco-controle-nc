@@ -22,20 +22,21 @@ import { createClient } from "@/lib/supabase/client";
 // Schema de validação Zod (ajuste conforme necessidade, ex: tamanho dos campos)
 const formSchema = z.object({
   numeronc: z.string().min(5, { message: "Número da NC é obrigatório." }),
-  datarecepcao: z.string().date("Data inválida."), // Espera 'YYYY-MM-DD'
+  datarecepcao: z.string().date("Data inválida."),
   ug_gestora: z.string().length(6, { message: "UG Gestora deve ter 6 dígitos." }),
   ug_favorecida: z.string().length(6, { message: "UG Favorecida deve ter 6 dígitos." }),
   ptres: z.string().min(1, { message: "PTRES é obrigatório."}),
-  naturezadespesa: z.string().min(6, { message: "ND é obrigatória."}), // Ex: 339030
+  naturezadespesa: z.string().min(6, { message: "ND é obrigatória."}),
   fonterecurso: z.string().min(1, { message: "Fonte é obrigatória."}),
-  pi: z.string().optional(), // PI é opcional
+  pi: z.string().optional(),
   // --- Linha Corrigida ---
   valortotal: z.preprocess(
-      (val) => (val === "" ? undefined : Number(val)), // Converte string vazia/undefined para NaN ou número
-      z.number({ invalid_type_error: "Valor inválido."}).positive({ message: "Valor deve ser positivo." })
+      (val) => (val === "" ? undefined : Number(val)),
+      z.number({ message: "Valor deve ser numérico." }) // Mensagem genérica para tipo inválido
+       .positive({ message: "Valor deve ser positivo." })
   ),
   // ----------------------
-  datavalidade: z.string().date("Data inválida.").optional().or(z.literal('')), // Opcional, aceita vazio
+  datavalidade: z.string().date("Data inválida.").optional().or(z.literal('')),
 });
 
 // Tipagem para as props do componente
