@@ -1,18 +1,17 @@
 // Caminho do arquivo: app/layout.tsx
 import type { Metadata } from "next";
-// 1. Importa a fonte Roboto
-import { Roboto } from "next/font/google"; 
+import { Roboto } from "next/font/google"; // Mantém a fonte Roboto
 import "./globals.css";
 
-// 2. Configura a fonte Roboto (com pesos diferentes)
 const roboto = Roboto({
   subsets: ["latin"],
-  weight: ["400", "500", "700"], // Padrão, Médio e Negrito
+  weight: ["400", "500", "700"],
 });
 
+// Branding atualizado
 export const metadata: Metadata = {
-  title: "SGCO - Gestão de Créditos",
-  description: "Sistema de Gerenciamento de Créditos Orçamentários",
+  title: "2º GEO - SALC",
+  description: "2º Centro de Geoinformação - SALC",
 };
 
 export default function RootLayout({
@@ -22,10 +21,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      {/* 3. Aplica a classe da fonte ao body */}
       <body className={roboto.className}>
-        <div className="min-h-screen bg-gray-100 text-gray-900">
-          {children}
+        {/* Esta estrutura (flex-col) garante que o rodapé fique no final */}
+        <div className="flex min-h-screen flex-col">
+          {/* O 'flex-grow' faz o conteúdo principal empurrar o rodapé */}
+          <main className="flex-grow">
+            {children}
+          </main>
+          
+          {/* Rodapé de Atribuição Adicionado */}
+          <footer className="py-4 text-center text-xs text-gray-500">
+            Desenvolvido por 3º Sgt SCT COM Lucas
+            <br />
+            Assistência de IA por Gemini (Google)
+          </footer>
         </div>
       </body>
     </html>

@@ -1,4 +1,4 @@
-/* Caminho do arquivo: app/globals.css */
+/* Caminho do arquivo: app/globals.css (CORRIGIDO) */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -40,34 +40,33 @@
     --radius: 0.5rem;
   }
 
-  /* O modo escuro (dark mode) não foi solicitado, 
-    mas a estrutura abaixo o suportaria. 
-    Por enquanto, ele usará as mesmas cores do modo claro.
-  */
   .dark {
-    --background: 0 0% 100%;
-    --foreground: 110 24% 21%;
-    --card: 0 0% 100%;
-    --card-foreground: 110 24% 21%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 110 24% 21%;
+    /* O modo escuro não foi solicitado, mas está aqui. */
+    --background: 110 24% 10%; /* Fundo escuro verde */
+    --foreground: 150 15% 90%; /* Texto claro */
+    --card: 110 24% 10%;
+    --card-foreground: 150 15% 90%;
+    --popover: 110 24% 10%;
+    --popover-foreground: 150 15% 90%;
     --primary: 149 93% 24%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 150 15% 90%;
-    --secondary-foreground: 149 93% 24%;
-    --muted: 150 15% 95%;
-    --muted-foreground: 110 24% 40%;
+    --secondary: 110 24% 20%;
+    --secondary-foreground: 150 15% 90%;
+    --muted: 110 24% 20%;
+    --muted-foreground: 150 15% 70%;
     --accent: 52 100% 57%;
     --accent-foreground: 110 24% 21%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 150 15% 88%;
-    --input: 150 15% 88%;
+    --border: 110 24% 20%;
+    --input: 110 24% 20%;
     --ring: 149 93% 24%;
   }
-}
 
-@layer base {
+  /* As regras abaixo (que causaram o erro) 
+    agora estão no mesmo bloco @layer base, 
+    APÓS a definição das variáveis.
+  */
   * {
     @apply border-border;
   }

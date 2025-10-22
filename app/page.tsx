@@ -2,10 +2,8 @@
 'use client' 
 
 import { useState } from 'react'
-// Importe o cliente do novo local (shadcn moveu para 'lib')
-import { createClient } from '@/lib/supabase/client' 
+import { createClient } from '@/lib/supabase/client' // Este caminho agora está correto
 
-// Importe os componentes de UI que acabamos de adicionar
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -41,19 +39,23 @@ export default function LoginPage() {
       setError(error.message)
     } else {
       setMessage('Login bem-sucedido! Redirecionando...')
-      // Futuro redirecionamento
       window.location.href = '/dashboard' 
     }
     setLoading(false)
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+    // O 'children' do layout agora está em um <main>, 
+    // então ajustamos o container do login para preencher a altura disponível
+    <div className="flex h-full items-center justify-center py-12">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold">SGCO</CardTitle>
+          {/* Branding Atualizado */}
+          <CardTitle className="text-3xl font-bold">
+            2º CENTRO DE GEOINFORMAÇÃO
+          </CardTitle>
           <CardDescription>
-            Sistema de Gerenciamento de Créditos Orçamentários
+            Controle Orçamentário - SALC
           </CardDescription>
         </CardHeader>
         <CardContent>
