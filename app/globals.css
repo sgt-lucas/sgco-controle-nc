@@ -1,4 +1,4 @@
-/* Caminho do arquivo: app/globals.css (CORRIGIDO) */
+/* FORÇANDO ATUALIZAÇÃO DE CSS - 21/10 22:40 */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -41,9 +41,8 @@
   }
 
   .dark {
-    /* O modo escuro não foi solicitado, mas está aqui. */
-    --background: 110 24% 10%; /* Fundo escuro verde */
-    --foreground: 150 15% 90%; /* Texto claro */
+    --background: 110 24% 10%; 
+    --foreground: 150 15% 90%; 
     --card: 110 24% 10%;
     --card-foreground: 150 15% 90%;
     --popover: 110 24% 10%;
@@ -63,10 +62,7 @@
     --ring: 149 93% 24%;
   }
 
-  /* As regras abaixo (que causaram o erro) 
-    agora estão no mesmo bloco @layer base, 
-    APÓS a definição das variáveis.
-  */
+  /* Ordem corrigida */
   * {
     @apply border-border;
   }
