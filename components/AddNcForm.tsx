@@ -22,19 +22,24 @@ import { createClient } from "@/lib/supabase/client";
 // Schema de validação Zod (ajuste conforme necessidade, ex: tamanho dos campos)
 const formSchema = z.object({
   numeronc: z.string().min(5, { message: "Número da NC é obrigatório." }),
-  datarecepcao: z.string().date("Data inválida."),
+  // entradas de data vindas de <input type="date"> chegam como string; validar não-vazias aqui
+  datarecepcao: z.string().min(1, { message: "Data de Recepção é obrigatória." }),
   ug_gestora: z.string().length(6, { message: "UG Gestora deve ter 6 dígitos." }),
   ug_favorecida: z.string().length(6, { message: "UG Favorecida deve ter 6 dígitos." }),
   ptres: z.string().min(1, { message: "PTRES é obrigatório."}),
   naturezadespesa: z.string().min(6, { message: "ND é obrigatória."}),
   fonterecurso: z.string().min(1, { message: "Fonte é obrigatória."}),
   pi: z.string().optional(),
-  // --- Linha Corrigida ---
-  valortotal: z.coerce // Revertido para coerce
-      .number({ message: "Valor deve ser numérico." })
-      .positive({ message: "Valor deve ser positivo." }),
-  // ----------------------
-  datavalidade: z.string().date("Data inválida.").optional().or(z.literal('')),
+  // coerciona strings para número (ex: "1500.50" -> 1500.5)
+  valortotal: z.string() // 1. Validar como string
+    .refine((val) => !isNaN(parseFloat(val)), { // 2. Garantir que a string é um número válido
+        message: "Valor inválido.",
+    })
+    .transform((val) => parseFloat(val)) // 3. Transformar a string em número
+    .refine((num) => num > 0, { // 4. Validar se o número resultante é positivo
+        message: "Valor deve ser positivo.",
+    }),
+  datavalidade: z.string().optional().or(z.literal('')),
 });
 
 // Tipagem para as props do componente
@@ -60,7 +65,7 @@ export function AddNcForm({ onSuccess, onCancel }: AddNcFormProps) {
       naturezadespesa: "",
       fonterecurso: "",
       pi: "",
-      valortotal: 0,
+      valortotal: "",
       datavalidade: "",
     },
   });
