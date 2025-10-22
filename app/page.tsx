@@ -1,22 +1,36 @@
-// Caminho do arquivo: src/app/page.tsx
-'use client' // Diretiva importante: indica que este é um componente interativo
+// Caminho do arquivo: app/page.tsx
+'use client' 
 
 import { useState } from 'react'
-import { createClient } from '@/utils/supabase/client' // Importa nosso cliente
+// Importe o cliente do novo local (shadcn moveu para 'lib')
+import { createClient } from '@/lib/supabase/client' 
+
+// Importe os componentes de UI que acabamos de adicionar
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  const supabase = createClient() // Inicializa o Supabase
+  const supabase = createClient() 
 
-  // Função para lidar com o login (Sign In)
   const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault() // Impede o recarregamento da página
+    e.preventDefault()
     setError(null)
     setMessage(null)
+    setLoading(true)
 
     const { error } = await supabase.auth.signInWithPassword({
       email: email,
@@ -27,110 +41,69 @@ export default function LoginPage() {
       setError(error.message)
     } else {
       setMessage('Login bem-sucedido! Redirecionando...')
-      // No futuro, faremos o redirecionamento aqui
-      window.location.href = '/dashboard' // Redireciona para a página principal
+      // Futuro redirecionamento
+      window.location.href = '/dashboard' 
     }
-  }
-
-  // Função para lidar com o cadastro (Sign Up)
-  // Nota: Você precisará cadastrar seus 4 usuários manualmente
-  // ou usar esta função temporariamente.
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setMessage(null)
-
-    const { data, error } = await supabase.auth.signUp({
-      email: email,
-      password: password,
-    })
-
-    if (error) {
-      setError(error.message)
-    } else {
-      setMessage('Usuário cadastrado! Verifique seu e-mail para confirmação.')
-    }
+    setLoading(false)
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-xl">
-        <h1 className="mb-6 text-center text-3xl font-bold text-gray-800">
-          SGCO
-        </h1>
-        <p className="mb-6 text-center text-gray-600">
-          Sistema de Gerenciamento de Créditos Orçamentários
-        </p>
-        
-        <form onSubmit={handleSignIn}>
-          <div className="mb-4">
-            <label 
-              htmlFor="email" 
-              className="mb-2 block text-sm font-medium text-gray-700"
-            >
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full rounded-md border border-gray-300 p-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              placeholder="seu.email@orgao.gov.br"
-            />
-          </div>
-          
-          <div className="mb-6">
-            <label 
-              htmlFor="password" 
-              className="mb-2 block text-sm font-medium text-gray-700"
-            >
-              Senha
-            </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full rounded-md border border-gray-300 p-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              placeholder="••••••••"
-            />
-          </div>
-          
-          {error && (
-            <div className="mb-4 rounded-md bg-red-100 p-3 text-center text-red-700">
-              {error}
-            </div>
-          )}
-          {message && (
-            <div className="mb-4 rounded-md bg-green-100 p-3 text-center text-green-700">
-              {message}
-            </div>
-          )}
+      <Card className="w-full max-w-md shadow-xl">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl font-bold">SGCO</CardTitle>
+          <CardDescription>
+            Sistema de Gerenciamento de Créditos Orçamentários
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSignIn}>
+            <div className="grid w-full items-center gap-4">
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="seu.email@orgao.gov.br"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="password">Senha</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Sua senha"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              
+              {error && (
+                <div className="rounded-md border border-red-300 bg-red-50 p-3 text-center text-sm text-red-700">
+                  {error}
+                </div>
+              )}
+              {message && (
+                <div className="rounded-md border border-green-300 bg-green-50 p-3 text-center text-sm text-green-700">
+                  {message}
+                </div>
+              )}
 
-          <button
-            type="submit"
-            className="w-full rounded-md bg-blue-600 p-3 text-white shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Entrar
-          </button>
-        </form>
-
-        {/* Botão de Cadastro (Sign Up) 
-          Mantenha-o comentado (ou remova) se for cadastrar usuários
-          diretamente no painel do Supabase.
-        */}
-        {/*
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Não tem conta?
-          <button onClick={handleSignUp} className="ml-1 font-medium text-blue-600 hover:underline">
-            Cadastrar (Teste)
-          </button>
-        </p>
-        */}
-      </div>
+              <Button 
+                type="submit" 
+                className="w-full"
+                disabled={loading}
+              >
+                {loading ? 'Entrando...' : 'Entrar'}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }

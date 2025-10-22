@@ -1,9 +1,14 @@
-// Caminho do arquivo: src/app/layout.tsx
+// Caminho do arquivo: app/layout.tsx
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+// 1. Importa a fonte Roboto
+import { Roboto } from "next/font/google"; 
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+// 2. Configura a fonte Roboto (com pesos diferentes)
+const roboto = Roboto({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"], // Padrão, Médio e Negrito
+});
 
 export const metadata: Metadata = {
   title: "SGCO - Gestão de Créditos",
@@ -17,8 +22,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={inter.className}>
-        {/* bg-gray-100 dark:bg-gray-900 define um fundo cinza claro */}
+      {/* 3. Aplica a classe da fonte ao body */}
+      <body className={roboto.className}>
         <div className="min-h-screen bg-gray-100 text-gray-900">
           {children}
         </div>

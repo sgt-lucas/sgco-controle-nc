@@ -1,4 +1,77 @@
-/* Caminho do arquivo: src/app/globals.css */
+/* Caminho do arquivo: app/globals.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    /* Cores Base (Light Mode) - EB.mil.br */
+    --background: 0 0% 100%; /* Branco */
+    --foreground: 110 24% 21%; /* Verde Escuro (Texto) - #2c4228 */
+
+    --card: 0 0% 100%;
+    --card-foreground: 110 24% 21%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 110 24% 21%;
+
+    /* Cor Primária (Botões, Links) - Verde EB #04773B */
+    --primary: 149 93% 24%;
+    --primary-foreground: 0 0% 100%; /* Texto Branco sobre o verde */
+
+    /* Cor Secundária (Botões "light") */
+    --secondary: 150 15% 90%; /* Um cinza-esverdeado claro */
+    --secondary-foreground: 149 93% 24%; /* Texto Verde sobre o cinza */
+
+    --muted: 150 15% 95%;
+    --muted-foreground: 110 24% 40%;
+
+    /* Cor de Destaque (Acento) - Amarelo EB #ffdd21 */
+    --accent: 52 100% 57%;
+    --accent-foreground: 110 24% 21%; /* Texto Escuro sobre o amarelo */
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 150 15% 88%;
+    --input: 150 15% 88%;
+    --ring: 149 93% 24%; /* Foco do input será Verde EB */
+
+    --radius: 0.5rem;
+  }
+
+  /* O modo escuro (dark mode) não foi solicitado, 
+    mas a estrutura abaixo o suportaria. 
+    Por enquanto, ele usará as mesmas cores do modo claro.
+  */
+  .dark {
+    --background: 0 0% 100%;
+    --foreground: 110 24% 21%;
+    --card: 0 0% 100%;
+    --card-foreground: 110 24% 21%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 110 24% 21%;
+    --primary: 149 93% 24%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 150 15% 90%;
+    --secondary-foreground: 149 93% 24%;
+    --muted: 150 15% 95%;
+    --muted-foreground: 110 24% 40%;
+    --accent: 52 100% 57%;
+    --accent-foreground: 110 24% 21%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 150 15% 88%;
+    --input: 150 15% 88%;
+    --ring: 149 93% 24%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
