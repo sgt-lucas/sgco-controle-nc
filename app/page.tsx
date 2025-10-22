@@ -1,8 +1,8 @@
-// Caminho do arquivo: app/page.tsx
-'use client' 
+// Caminho do arquivo: app/page.tsx (Atualizado para Usuário/Senha)
+'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client' // Este caminho agora está correto
+import { createClient } from '@/lib/supabase/client' // Caminho correto
 
 import { Button } from "@/components/ui/button"
 import {
@@ -16,13 +16,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
+  // Estado renomeado de 'email' para 'username'
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const supabase = createClient() 
+  const supabase = createClient()
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -30,27 +31,27 @@ export default function LoginPage() {
     setMessage(null)
     setLoading(true)
 
+    // Passa o 'username' do estado para o campo 'email' esperado pelo Supabase
     const { error } = await supabase.auth.signInWithPassword({
-      email: email,
+      email: username, // <- Mudança aqui
       password: password,
     })
 
     if (error) {
-      setError(error.message)
+      // Mensagem de erro genérica para não vazar se o usuário existe ou não
+      setError('Usuário ou senha inválidos.')
+      console.error("Erro de login:", error.message) // Log detalhado no console do navegador
     } else {
       setMessage('Login bem-sucedido! Redirecionando...')
-      window.location.href = '/dashboard' 
+      window.location.href = '/dashboard'
     }
     setLoading(false)
   }
 
   return (
-    // O 'children' do layout agora está em um <main>, 
-    // então ajustamos o container do login para preencher a altura disponível
     <div className="flex h-full items-center justify-center py-12">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center">
-          {/* Branding Atualizado */}
           <CardTitle className="text-3xl font-bold">
             2º CENTRO DE GEOINFORMAÇÃO
           </CardTitle>
@@ -61,17 +62,19 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSignIn}>
             <div className="grid w-full items-center gap-4">
+              {/* Campo de Usuário Atualizado */}
               <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="username">Usuário</Label> {/* <- Label Atualizada */}
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu.email@orgao.gov.br"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="username"
+                  type="text" // <- Mudado de 'email' para 'text'
+                  placeholder="Seu nome de usuário" {/* <- Placeholder Atualizado */}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                 />
               </div>
+              {/* Campo de Senha (sem alterações) */}
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="password">Senha</Label>
                 <Input
@@ -83,7 +86,7 @@ export default function LoginPage() {
                   required
                 />
               </div>
-              
+
               {error && (
                 <div className="rounded-md border border-red-300 bg-red-50 p-3 text-center text-sm text-red-700">
                   {error}
@@ -95,8 +98,8 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full"
                 disabled={loading}
               >
