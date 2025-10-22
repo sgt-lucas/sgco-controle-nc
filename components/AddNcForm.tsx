@@ -30,11 +30,9 @@ const formSchema = z.object({
   fonterecurso: z.string().min(1, { message: "Fonte é obrigatória."}),
   pi: z.string().optional(),
   // --- Linha Corrigida ---
-  valortotal: z.preprocess(
-      (val) => (val === "" ? undefined : Number(val)),
-      z.number({ message: "Valor deve ser numérico." }) // Mensagem genérica para tipo inválido
-       .positive({ message: "Valor deve ser positivo." })
-  ),
+  valortotal: z.coerce // Revertido para coerce
+      .number({ message: "Valor deve ser numérico." })
+      .positive({ message: "Valor deve ser positivo." }),
   // ----------------------
   datavalidade: z.string().date("Data inválida.").optional().or(z.literal('')),
 });
