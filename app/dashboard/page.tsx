@@ -1,11 +1,10 @@
-// Caminho do arquivo: app/dashboard/page.tsx
-'use client' // Necessário para hooks (useState, useEffect) e interações (logout)
+// Caminho do arquivo: app/dashboard/page.tsx (CORRIGIDO com nomes de colunas minúsculos)
+'use client'
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation'; // Hook para redirecionamento
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
-// Importa os componentes de UI necessários
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -16,79 +15,81 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton"; // Usaremos para indicar carregamento
+import { Skeleton } from "@/components/ui/skeleton";
 
-// Define a estrutura (tipo) dos dados de uma Nota de Crédito
-// Baseado no schema SQL que criamos na Fase 2
+// --- CORREÇÃO PRINCIPAL: Tipo alinhado com nomes de coluna minúsculos do DB ---
 type NotaCredito = {
-  Id: number;
-  NumeroNC: string;
-  DataRecepcao: string; // Datas virão como string
-  PTRES: string;
-  NaturezaDespesa: string;
-  FonteRecurso: string;
-  PI: string | null;
-  ValorTotal: number;
-  SaldoDisponivel: number; // Campo crucial calculado pelos triggers
-  DataValidade: string | null;
+  id: number; // Geralmente 'id' minúsculo por padrão no Supabase/SQL
+  numeronc: string;
+  datarecepcao: string;
+  ptres: string;
+  naturezadespesa: string;
+  fonterecurso: string;
+  pi: string | null;
+  valortotal: number;
+  saldodisponivel: number;
+  datavalidade: string | null;
+  // Adicione outros campos se necessário (valorreservado, valorempenhado, valorrecolhido, datacriacao)
+  // Se você precisar deles para exibição ou lógica futura.
 };
 
 export default function DashboardPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  // Estados do componente
-  const [loadingUser, setLoadingUser] = useState(true); // Estado inicial: verificando usuário
-  const [userEmail, setUserEmail] = useState<string | null>(null); // Guardar email (username@sufixo)
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [loadingNCs, setLoadingNCs] = useState(false);
   const [notasCredito, setNotasCredito] = useState<NotaCredito[]>([]);
   const [errorNCs, setErrorNCs] = useState<string | null>(null);
 
-  // Efeito para verificar autenticação ao carregar a página
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session) {
-        router.push('/'); // Redireciona para login se não houver sessão
+        router.push('/');
       } else {
-        setUserEmail(session.user?.email ?? null); // Guarda o email (com sufixo)
-        setLoadingUser(false); // Terminou de verificar
-        fetchNotasCredito(); // Busca os dados das NCs após confirmar login
+        setUserEmail(session.user?.email ?? null);
+        setLoadingUser(false);
+        fetchNotasCredito();
       }
     };
     checkUser();
-  }, [supabase, router]); // Dependências do efeito
+  }, [supabase, router]);
 
-  // Função para buscar as Notas de Crédito
   const fetchNotasCredito = async () => {
     setLoadingNCs(true);
     setErrorNCs(null);
 
+    // Seleciona as colunas usando os nomes minúsculos esperados
     const { data, error } = await supabase
-      .from('NotasCredito') // Nome exato da tabela no Supabase
-      .select('*') // Seleciona todas as colunas
-      .order('DataRecepcao', { ascending: false }); // Ordena pelas mais recentes
+      .from('NotasCredito') // Certifique-se que o NOME DA TABELA está correto aqui
+      .select('id, numeronc, datarecepcao, ptres, naturezadespesa, fonterecurso, pi, valortotal, saldodisponivel, datavalidade') // Seleciona colunas específicas
+      .order('datarecepcao', { ascending: false });
 
     if (error) {
       console.error("Erro ao buscar Notas de Crédito:", error);
+      // Mantém a mensagem de erro original do Supabase para diagnóstico
       setErrorNCs(`Falha ao carregar dados: ${error.message}`);
-      setNotasCredito([]); // Limpa dados em caso de erro
+      setNotasCredito([]);
     } else {
-      setNotasCredito(data || []);
+      // Ajusta os tipos se necessário (ex: Supabase pode retornar números como strings às vezes)
+      const dataTyped = data?.map(item => ({
+        ...item,
+        valortotal: Number(item.valortotal),
+        saldodisponivel: Number(item.saldodisponivel),
+      })) || [];
+      setNotasCredito(dataTyped);
     }
     setLoadingNCs(false);
   };
 
-  // Função para Logout
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push('/'); // Redireciona para a página de login após sair
+    router.push('/');
   };
 
-  // ----- Renderização Condicional -----
-
-  // Se ainda estiver verificando o usuário, mostra uma mensagem simples
   if (loadingUser) {
     return (
         <div className="flex h-screen items-center justify-center">
@@ -97,7 +98,6 @@ export default function DashboardPage() {
     );
   }
 
-  // Se chegou aqui, o usuário está logado (ou foi redirecionado)
   return (
     <div className="container mx-auto p-4 md:p-6 lg:p-8">
       <header className="mb-6 flex items-center justify-between border-b pb-4">
@@ -113,15 +113,12 @@ export default function DashboardPage() {
       </header>
 
       <section>
-        {/* Título da Seção e Botão Adicionar (funcionalidade futura) */}
         <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-medium">Notas de Crédito Recebidas</h2>
             {/* <Button size="sm">Adicionar NC</Button> */}
         </div>
 
-        {/* Exibição da Tabela ou Indicadores de Estado */}
         {loadingNCs && (
-          // Mostra esqueletos enquanto carrega
           <div className="space-y-2">
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
@@ -130,17 +127,14 @@ export default function DashboardPage() {
         )}
 
         {!loadingNCs && errorNCs && (
-          // Mostra mensagem de erro
           <p className="text-center text-red-600">{errorNCs}</p>
         )}
 
         {!loadingNCs && !errorNCs && notasCredito.length === 0 && (
-          // Mostra mensagem se não houver dados
           <p className="text-center text-muted-foreground">Nenhuma Nota de Crédito encontrada.</p>
         )}
 
         {!loadingNCs && !errorNCs && notasCredito.length > 0 && (
-          // Renderiza a tabela se houver dados
           <div className="rounded-md border">
             <Table>
               <TableCaption>Lista das últimas notas de crédito recebidas.</TableCaption>
@@ -153,23 +147,26 @@ export default function DashboardPage() {
                   <TableHead>Fonte</TableHead>
                   <TableHead className="text-right">Valor Total</TableHead>
                   <TableHead className="text-right font-semibold">Saldo Disponível</TableHead>
-                  {/* Adicionar coluna de Ações (Editar/Detalhes) depois */}
                 </TableRow>
               </TableHeader>
               <TableBody>
+                {/* --- CORREÇÃO PRINCIPAL: Usando nomes de propriedade minúsculos --- */}
                 {notasCredito.map((nc) => (
-                  <TableRow key={nc.Id}>
-                    <TableCell className="font-medium">{nc.NumeroNC}</TableCell>
-                    <TableCell>{new Date(nc.DataRecepcao).toLocaleDateString('pt-BR')}</TableCell>
-                    <TableCell>{nc.PTRES}</TableCell>
-                    <TableCell>{nc.NaturezaDespesa}</TableCell>
-                    <TableCell>{nc.FonteRecurso}</TableCell>
+                  <TableRow key={nc.id}> {/* <- id */}
+                    <TableCell className="font-medium">{nc.numeronc}</TableCell> {/* <- numeronc */}
+                    <TableCell>
+                      {/* Adiciona verificação para data inválida */}
+                      {nc.datarecepcao ? new Date(nc.datarecepcao + 'T00:00:00').toLocaleDateString('pt-BR') : '-'}
+                      </TableCell> {/* <- datarecepcao */}
+                    <TableCell>{nc.ptres}</TableCell> {/* <- ptres */}
+                    <TableCell>{nc.naturezadespesa}</TableCell> {/* <- naturezadespesa */}
+                    <TableCell>{nc.fonterecurso}</TableCell> {/* <- fonterecurso */}
                     <TableCell className="text-right">
-                      {nc.ValorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                    </TableCell>
+                      {nc.valortotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </TableCell> {/* <- valortotal */}
                     <TableCell className="text-right font-semibold">
-                      {nc.SaldoDisponivel.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                    </TableCell>
+                      {nc.saldodisponivel.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </TableCell> {/* <- saldodisponivel */}
                   </TableRow>
                 ))}
               </TableBody>
@@ -177,10 +174,6 @@ export default function DashboardPage() {
           </div>
         )}
       </section>
-
-      {/* Seção Futura para Notas de Empenho */}
-      {/* <section className="mt-8"> ... </section> */}
-
     </div>
   );
 }
