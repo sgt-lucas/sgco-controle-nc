@@ -1,4 +1,4 @@
-// Caminho: components/AddNcForm.tsx (VALIDAÇÃO SIMPLIFICADA)
+// Caminho: components/AddNcForm.tsx (VALIDAÇÃO SIMPLIFICADA E ESTÁVEL)
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,11 +23,10 @@ const formSchema = z.object({
   naturezadespesa: z.string().min(6, { message: "ND é obrigatória."}),
   fonterecurso: z.string().min(1, { message: "Fonte é obrigatória."}),
   pi: z.string().optional(),
-  // Simplificado: Apenas string não vazia que pareça número (sem .transform)
   valortotal: z.string()
       .min(1, { message: "Valor total é obrigatório."})
-      .refine((val) => /^\d+(\.\d{1,2})?$/.test(val), {
-          message: "Valor inválido (use ponto para decimal, ex: 1500.50).",
+      .refine((val) => /^\d+(\.\d{1,2})?$/.test(val.replace(',', '.')), { // Aceita vírgula ou ponto
+          message: "Valor inválido (use ponto ou vírgula para decimais).",
       }),
   datavalidade: z.string().refine((date) => date === "" || !isNaN(Date.parse(date)), { message: "Data inválida."}).optional().or(z.literal('')),
 });
@@ -45,7 +44,7 @@ export function AddNcForm({ onSuccess, onCancel }: AddNcFormProps) {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema), // Valida usando o formSchema (string)
+    resolver: zodResolver(formSchema),
     defaultValues: {
       numeronc: "", datarecepcao: new Date().toISOString().split('T')[0],
       ug_gestora: "", ug_favorecida: "", ptres: "", naturezadespesa: "",
@@ -57,14 +56,16 @@ export function AddNcForm({ onSuccess, onCancel }: AddNcFormProps) {
     setIsSubmitting(true);
     setSubmitError(null);
 
-    // --- Conversão Manual para Número ANTES de inserir ---
-    const valorTotalNumber = parseFloat(values.valortotal);
+    // --- Conversão e Validação Manual do Valor ---
+    const valorTotalString = values.valortotal.replace(',', '.'); // Garante ponto decimal
+    const valorTotalNumber = parseFloat(valorTotalString);
+
     if (isNaN(valorTotalNumber) || valorTotalNumber < 0) {
-        setSubmitError("Valor total inválido ou negativo.");
+        form.setError("valortotal", { type: "manual", message: "Valor inválido ou negativo." });
         setIsSubmitting(false);
-        return; // Interrompe o envio
+        return;
     }
-    // ---------------------------------------------------
+    // ---------------------------------------------
 
     try {
         const dataToInsert = {
@@ -73,7 +74,7 @@ export function AddNcForm({ onSuccess, onCancel }: AddNcFormProps) {
             ptres: values.ptres, naturezadespesa: values.naturezadespesa,
             fonterecurso: values.fonterecurso,
             pi: values.pi || null,
-            valortotal: valorTotalNumber, // <-- Usa o número convertido
+            valortotal: valorTotalNumber, // Usa o número convertido
             datavalidade: values.datavalidade || null,
         };
         console.log("Dados para inserir:", dataToInsert);
@@ -96,7 +97,7 @@ export function AddNcForm({ onSuccess, onCancel }: AddNcFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {/* Campos do formulário (sem alterações aqui) */}
+        {/* Campos do formulário */}
         <FormField control={form.control} name="numeronc" render={({ field }) => ( <FormItem> <FormLabel>Número da NC</FormLabel> <FormControl> <Input placeholder="Ex: 2024NC001234" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
         <FormField control={form.control} name="datarecepcao" render={({ field }) => ( <FormItem> <FormLabel>Data de Recepção</FormLabel> <FormControl> <Input type="date" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
         <div className="grid grid-cols-2 gap-4">
@@ -109,7 +110,7 @@ export function AddNcForm({ onSuccess, onCancel }: AddNcFormProps) {
             <FormField control={form.control} name="fonterecurso" render={({ field }) => ( <FormItem> <FormLabel>Fonte Recurso</FormLabel> <FormControl> <Input placeholder="Ex: 0100" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
         </div>
         <FormField control={form.control} name="pi" render={({ field }) => ( <FormItem> <FormLabel>Plano Interno (PI)</FormLabel> <FormControl> <Input placeholder="Opcional" {...field} /> </FormControl> <FormDescription>Se aplicável.</FormDescription> <FormMessage /> </FormItem> )}/>
-        <FormField control={form.control} name="valortotal" render={({ field }) => ( <FormItem> <FormLabel>Valor Total (R$)</FormLabel> <FormControl> <Input type="text" inputMode="decimal" placeholder="Ex: 1500.50 (use ponto)" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
+        <FormField control={form.control} name="valortotal" render={({ field }) => ( <FormItem> <FormLabel>Valor Total (R$)</FormLabel> <FormControl> <Input type="text" inputMode="decimal" placeholder="Ex: 1500.50 (use ponto ou vírgula)" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
         <FormField control={form.control} name="datavalidade" render={({ field }) => ( <FormItem> <FormLabel>Data de Validade</FormLabel> <FormControl> <Input type="date" {...field} /> </FormControl> <FormDescription>Opcional.</FormDescription> <FormMessage /> </FormItem> )}/>
 
         {submitError && (<p className="text-sm font-medium text-destructive">{submitError}</p>)}
