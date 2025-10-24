@@ -1,4 +1,4 @@
-// Caminho do arquivo: app/dashboard/page.tsx (Revisado novamente para erro React.Children)
+// Caminho do arquivo: app/dashboard/page.tsx (Removido asChild do DialogTrigger)
 'use client'
 
 import { useState, useEffect, useCallback } from 'react';
@@ -98,21 +98,21 @@ export default function DashboardPage() {
       <section>
         <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-medium">Notas de Crédito Recebidas</h2>
-             {/* --- Garanta que esta estrutura está limpa --- */}
+             {/* --- Alteração: Removido asChild --- */}
              <Dialog open={isAddNcDialogOpen} onOpenChange={setIsAddNcDialogOpen}>
-                <DialogTrigger asChild>
-                    {/* Linha ÚNICA entre <DialogTrigger> e </DialogTrigger> */}
+                {/* O Trigger agora apenas envolve o botão */}
+                <DialogTrigger>
                     <Button size="sm">Adicionar NC</Button>
                 </DialogTrigger>
+                {/* ---------------------------------- */}
                 <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader> <DialogTitle>Cadastrar Nova Nota de Crédito</DialogTitle> <DialogDescription> Preencha os dados da NC recebida. </DialogDescription> </DialogHeader>
                     <AddNcForm onSuccess={handleNcAdded} onCancel={() => setIsAddNcDialogOpen(false)} />
                 </DialogContent>
             </Dialog>
-             {/* ------------------------------------------- */}
         </div>
 
-        {/* Tabela */}
+        {/* Tabela (lógica inalterada) */}
         {loadingNCs && (<div className="space-y-2"> <Skeleton className="h-10 w-full" /> <Skeleton className="h-10 w-full" /> <Skeleton className="h-10 w-full" /> </div>)}
         {!loadingNCs && errorNCs && (<p className="text-center text-red-600">{errorNCs}</p>)}
         {!loadingNCs && !errorNCs && notasCredito.length === 0 && (<p className="text-center text-muted-foreground">Nenhuma Nota de Crédito encontrada.</p>)}
