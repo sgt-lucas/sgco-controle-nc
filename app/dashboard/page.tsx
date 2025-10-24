@@ -1,4 +1,4 @@
-// Caminho do arquivo: app/dashboard/page.tsx (Removido asChild do DialogTrigger)
+// Caminho do arquivo: app/dashboard/page.tsx (Controlo Manual do Dialog)
 'use client'
 
 import { useState, useEffect, useCallback } from 'react';
@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
+  // Removido DialogTrigger daqui
 } from "@/components/ui/dialog";
 import { AddNcForm } from "@/components/AddNcForm";
 
@@ -32,7 +33,7 @@ export default function DashboardPage() {
   const [loadingNCs, setLoadingNCs] = useState(false);
   const [notasCredito, setNotasCredito] = useState<NotaCredito[]>([]);
   const [errorNCs, setErrorNCs] = useState<string | null>(null);
-  const [isAddNcDialogOpen, setIsAddNcDialogOpen] = useState(false);
+  const [isAddNcDialogOpen, setIsAddNcDialogOpen] = useState(false); // Estado que controla o Dialog
 
   const fetchNotasCredito = useCallback(async () => {
     setLoadingNCs(true);
@@ -72,8 +73,13 @@ export default function DashboardPage() {
   };
 
   const handleNcAdded = () => {
-    setIsAddNcDialogOpen(false);
-    fetchNotasCredito();
+    setIsAddNcDialogOpen(false); // Fecha o Dialog
+    fetchNotasCredito(); // Rebusca os dados
+  };
+
+  // Função para abrir o Dialog manualmente
+  const openAddNcDialog = () => {
+    setIsAddNcDialogOpen(true);
   };
 
   if (loadingUser) { return ( <div className="flex h-screen items-center justify-center"><p>Verificando autenticação...</p></div> ); }
@@ -81,6 +87,7 @@ export default function DashboardPage() {
   return (
     <div className="container mx-auto p-4 md:p-6 lg:p-8">
       <header className="mb-6 flex items-center justify-between border-b pb-4">
+        {/* ... (cabeçalho com logo e botão Sair inalterado) ... */}
         <div className="flex items-center gap-4">
             <Image
                 src="/logo-2cgeo.png" alt="Distintivo 2º CGEO"
@@ -98,19 +105,20 @@ export default function DashboardPage() {
       <section>
         <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-medium">Notas de Crédito Recebidas</h2>
-             {/* --- Alteração: Removido asChild --- */}
-             <Dialog open={isAddNcDialogOpen} onOpenChange={setIsAddNcDialogOpen}>
-                {/* O Trigger agora apenas envolve o botão */}
-                <DialogTrigger>
-                    <Button size="sm">Adicionar NC</Button>
-                </DialogTrigger>
-                {/* ---------------------------------- */}
-                <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-                    <DialogHeader> <DialogTitle>Cadastrar Nova Nota de Crédito</DialogTitle> <DialogDescription> Preencha os dados da NC recebida. </DialogDescription> </DialogHeader>
-                    <AddNcForm onSuccess={handleNcAdded} onCancel={() => setIsAddNcDialogOpen(false)} />
-                </DialogContent>
-            </Dialog>
+             {/* --- Alteração: Botão controla o estado diretamente --- */}
+             <Button size="sm" onClick={openAddNcDialog}>Adicionar NC</Button>
+             {/* --------------------------------------------------- */}
         </div>
+
+         {/* --- O Dialog agora é renderizado separadamente e controlado pelo estado --- */}
+         <Dialog open={isAddNcDialogOpen} onOpenChange={setIsAddNcDialogOpen}>
+            {/* Não precisamos mais do DialogTrigger aqui */}
+            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+                <DialogHeader> <DialogTitle>Cadastrar Nova Nota de Crédito</DialogTitle> <DialogDescription> Preencha os dados da NC recebida. </DialogDescription> </DialogHeader>
+                <AddNcForm onSuccess={handleNcAdded} onCancel={() => setIsAddNcDialogOpen(false)} />
+            </DialogContent>
+        </Dialog>
+         {/* ---------------------------------------------------------------------- */}
 
         {/* Tabela (lógica inalterada) */}
         {loadingNCs && (<div className="space-y-2"> <Skeleton className="h-10 w-full" /> <Skeleton className="h-10 w-full" /> <Skeleton className="h-10 w-full" /> </div>)}
