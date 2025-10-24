@@ -1,17 +1,21 @@
-// Caminho do arquivo: app/dashboard/page.tsx (Com Logo no Header e Schema NC simplificado)
+// Caminho do arquivo: app/dashboard/page.tsx (Revisado)
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react'; // Adicionado useCallback
 import { useRouter } from 'next/navigation';
-import Image from 'next/image'; // Importa o Image
+import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 
-// ... (imports de UI inalterados: Button, Table, Skeleton, Dialog, AddNcForm) ...
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AddNcForm } from "@/components/AddNcForm"; // Importa o formulário SIMPLIFICADO
+import {
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
+// Importa o formulário com a validação simplificada que deve passar no build
+import { AddNcForm } from "@/components/AddNcForm";
 
 // Tipo NotaCredito (mantém nomes minúsculos)
 type NotaCredito = {
@@ -31,14 +35,15 @@ export default function DashboardPage() {
   const [errorNCs, setErrorNCs] = useState<string | null>(null);
   const [isAddNcDialogOpen, setIsAddNcDialogOpen] = useState(false);
 
-  // Hook para buscar dados ao montar E quando chamado explicitamente
-  const fetchNotasCredito = async () => { /* ... (lógica inalterada) ... */
+  // Usando useCallback para estabilizar a função fetchNotasCredito
+  const fetchNotasCredito = useCallback(async () => {
     setLoadingNCs(true);
     setErrorNCs(null);
     const { data, error } = await supabase
       .from('NotasCredito')
       .select('id, numeronc, datarecepcao, ptres, naturezadespesa, fonterecurso, pi, valortotal, saldodisponivel, datavalidade')
       .order('datarecepcao', { ascending: false });
+
     if (error) {
       console.error("Erro ao buscar Notas de Crédito:", error);
       setErrorNCs(`Falha ao carregar dados: ${error.message}`);
@@ -48,7 +53,7 @@ export default function DashboardPage() {
       setNotasCredito(dataTyped);
     }
     setLoadingNCs(false);
-  };
+  }, [supabase]); // Dependência: supabase client
 
   useEffect(() => {
     const checkUser = async () => {
@@ -61,15 +66,14 @@ export default function DashboardPage() {
       }
     };
     checkUser();
-     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Roda apenas uma vez ao montar
+  }, [supabase, router, fetchNotasCredito]); // Adiciona fetchNotasCredito às dependências
 
-  const handleLogout = async () => { /* ... (lógica inalterada) ... */
+  const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/');
   };
 
-  const handleNcAdded = () => { /* ... (lógica inalterada) ... */
+  const handleNcAdded = () => {
     setIsAddNcDialogOpen(false);
     fetchNotasCredito(); // Rebusca os dados
   };
@@ -78,12 +82,12 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto p-4 md:p-6 lg:p-8">
-      {/* --- Cabeçalho Atualizado com Logo --- */}
       <header className="mb-6 flex items-center justify-between border-b pb-4">
         <div className="flex items-center gap-4">
             <Image
                 src="/logo-2cgeo.png" alt="Distintivo 2º CGEO"
-                width={40} height={50} // Ajuste conforme necessário
+                width={40} height={50} // Use a altura correta baseada na proporção da imagem
+                priority // Ajuda a carregar o logo mais rápido
             />
             <div>
               <h1 className="text-xl font-semibold text-primary"> Painel de Controle - SALC </h1>
@@ -92,18 +96,19 @@ export default function DashboardPage() {
         </div>
         <Button variant="outline" size="sm" onClick={handleLogout}> Sair </Button>
       </header>
-      {/* ------------------------------------ */}
 
       <section>
         <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-medium">Notas de Crédito Recebidas</h2>
+             {/* Estrutura revisada do DialogTrigger */}
              <Dialog open={isAddNcDialogOpen} onOpenChange={setIsAddNcDialogOpen}>
                 <DialogTrigger asChild>
+                    {/* Garante que o Button é o ÚNICO filho direto */}
                     <Button size="sm">Adicionar NC</Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader> <DialogTitle>Cadastrar Nova Nota de Crédito</DialogTitle> <DialogDescription> Preencha os dados da NC recebida. </DialogDescription> </DialogHeader>
-                    {/* Usa o formulário SIMPLIFICADO */}
+                    {/* O formulário simplificado deve funcionar */}
                     <AddNcForm onSuccess={handleNcAdded} onCancel={() => setIsAddNcDialogOpen(false)} />
                 </DialogContent>
             </Dialog>
