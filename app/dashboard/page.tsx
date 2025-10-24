@@ -1,7 +1,7 @@
-// Caminho do arquivo: app/dashboard/page.tsx (Revisado)
+// Caminho do arquivo: app/dashboard/page.tsx (Revisado para erro React.Children)
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'; // Adicionado useCallback
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
@@ -14,10 +14,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
-// Importa o formulário com a validação simplificada que deve passar no build
+// Importa o formulário com a validação SIMPLIFICADA
 import { AddNcForm } from "@/components/AddNcForm";
 
-// Tipo NotaCredito (mantém nomes minúsculos)
+// Tipo NotaCredito
 type NotaCredito = {
   id: number; numeronc: string; datarecepcao: string; ptres: string;
   naturezadespesa: string; fonterecurso: string; pi: string | null;
@@ -35,7 +35,6 @@ export default function DashboardPage() {
   const [errorNCs, setErrorNCs] = useState<string | null>(null);
   const [isAddNcDialogOpen, setIsAddNcDialogOpen] = useState(false);
 
-  // Usando useCallback para estabilizar a função fetchNotasCredito
   const fetchNotasCredito = useCallback(async () => {
     setLoadingNCs(true);
     setErrorNCs(null);
@@ -53,7 +52,7 @@ export default function DashboardPage() {
       setNotasCredito(dataTyped);
     }
     setLoadingNCs(false);
-  }, [supabase]); // Dependência: supabase client
+  }, [supabase]);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -62,11 +61,11 @@ export default function DashboardPage() {
       else {
         setUserEmail(session.user?.email ?? null);
         setLoadingUser(false);
-        fetchNotasCredito(); // Busca NCs após login
+        fetchNotasCredito();
       }
     };
     checkUser();
-  }, [supabase, router, fetchNotasCredito]); // Adiciona fetchNotasCredito às dependências
+  }, [supabase, router, fetchNotasCredito]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -75,7 +74,7 @@ export default function DashboardPage() {
 
   const handleNcAdded = () => {
     setIsAddNcDialogOpen(false);
-    fetchNotasCredito(); // Rebusca os dados
+    fetchNotasCredito();
   };
 
   if (loadingUser) { return ( <div className="flex h-screen items-center justify-center"><p>Verificando autenticação...</p></div> ); }
@@ -86,8 +85,8 @@ export default function DashboardPage() {
         <div className="flex items-center gap-4">
             <Image
                 src="/logo-2cgeo.png" alt="Distintivo 2º CGEO"
-                width={40} height={50} // Use a altura correta baseada na proporção da imagem
-                priority // Ajuda a carregar o logo mais rápido
+                width={40} height={50} // Ajuste conforme necessário
+                priority
             />
             <div>
               <h1 className="text-xl font-semibold text-primary"> Painel de Controle - SALC </h1>
@@ -100,18 +99,19 @@ export default function DashboardPage() {
       <section>
         <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-medium">Notas de Crédito Recebidas</h2>
-             {/* Estrutura revisada do DialogTrigger */}
+             {/* --- Verifique esta estrutura cuidadosamente --- */}
              <Dialog open={isAddNcDialogOpen} onOpenChange={setIsAddNcDialogOpen}>
                 <DialogTrigger asChild>
-                    {/* Garante que o Button é o ÚNICO filho direto */}
+                    {/* Deve haver APENAS este <Button> aqui dentro */}
                     <Button size="sm">Adicionar NC</Button>
                 </DialogTrigger>
+                {/* O DialogContent vem DEPOIS do Trigger */}
                 <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader> <DialogTitle>Cadastrar Nova Nota de Crédito</DialogTitle> <DialogDescription> Preencha os dados da NC recebida. </DialogDescription> </DialogHeader>
-                    {/* O formulário simplificado deve funcionar */}
                     <AddNcForm onSuccess={handleNcAdded} onCancel={() => setIsAddNcDialogOpen(false)} />
                 </DialogContent>
             </Dialog>
+             {/* ------------------------------------------- */}
         </div>
 
         {/* Tabela (lógica inalterada) */}
