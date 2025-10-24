@@ -1,28 +1,17 @@
-// Caminho do arquivo: app/dashboard/page.tsx (Controlo Manual do Dialog)
+// Caminho do arquivo: app/dashboard/page.tsx (VERSÃO SIMPLIFICADA PARA TESTE)
 'use client'
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 
 import { Button } from "@/components/ui/button";
+// Apenas importa o Dialog e seus subcomponentes básicos
 import {
-  Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
-  // Removido DialogTrigger daqui
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle
 } from "@/components/ui/dialog";
-import { AddNcForm } from "@/components/AddNcForm";
-
-// Tipo NotaCredito
-type NotaCredito = {
-  id: number; numeronc: string; datarecepcao: string; ptres: string;
-  naturezadespesa: string; fonterecurso: string; pi: string | null;
-  valortotal: number; saldodisponivel: number; datavalidade: string | null;
-};
+// Não importa AddNcForm nem Table/Skeleton por enquanto
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -30,51 +19,27 @@ export default function DashboardPage() {
 
   const [loadingUser, setLoadingUser] = useState(true);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [loadingNCs, setLoadingNCs] = useState(false);
-  const [notasCredito, setNotasCredito] = useState<NotaCredito[]>([]);
-  const [errorNCs, setErrorNCs] = useState<string | null>(null);
+  // Removemos estados relacionados à tabela NC
   const [isAddNcDialogOpen, setIsAddNcDialogOpen] = useState(false); // Estado que controla o Dialog
-
-  const fetchNotasCredito = useCallback(async () => {
-    setLoadingNCs(true);
-    setErrorNCs(null);
-    const { data, error } = await supabase
-      .from('NotasCredito')
-      .select('id, numeronc, datarecepcao, ptres, naturezadespesa, fonterecurso, pi, valortotal, saldodisponivel, datavalidade')
-      .order('datarecepcao', { ascending: false });
-
-    if (error) {
-      console.error("Erro ao buscar Notas de Crédito:", error);
-      setErrorNCs(`Falha ao carregar dados: ${error.message}`);
-      setNotasCredito([]);
-    } else {
-       const dataTyped = data?.map(item => ({...item, valortotal: Number(item.valortotal), saldodisponivel: Number(item.saldodisponivel)})) || [];
-      setNotasCredito(dataTyped);
-    }
-    setLoadingNCs(false);
-  }, [supabase]);
 
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { router.push('/'); }
-      else {
+      if (!session) {
+        router.push('/');
+      } else {
         setUserEmail(session.user?.email ?? null);
         setLoadingUser(false);
-        fetchNotasCredito();
+        // Não busca NCs nesta versão
       }
     };
     checkUser();
-  }, [supabase, router, fetchNotasCredito]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Dependências simplificadas
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/');
-  };
-
-  const handleNcAdded = () => {
-    setIsAddNcDialogOpen(false); // Fecha o Dialog
-    fetchNotasCredito(); // Rebusca os dados
   };
 
   // Função para abrir o Dialog manualmente
@@ -87,12 +52,10 @@ export default function DashboardPage() {
   return (
     <div className="container mx-auto p-4 md:p-6 lg:p-8">
       <header className="mb-6 flex items-center justify-between border-b pb-4">
-        {/* ... (cabeçalho com logo e botão Sair inalterado) ... */}
         <div className="flex items-center gap-4">
             <Image
                 src="/logo-2cgeo.png" alt="Distintivo 2º CGEO"
-                width={40} height={50}
-                priority
+                width={40} height={50} priority
             />
             <div>
               <h1 className="text-xl font-semibold text-primary"> Painel de Controle - SALC </h1>
@@ -105,44 +68,30 @@ export default function DashboardPage() {
       <section>
         <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-medium">Notas de Crédito Recebidas</h2>
-             {/* --- Alteração: Botão controla o estado diretamente --- */}
-             <Button size="sm" onClick={openAddNcDialog}>Adicionar NC</Button>
-             {/* --------------------------------------------------- */}
+             {/* Botão simples que abre o Dialog */}
+             <Button size="sm" onClick={openAddNcDialog}>Adicionar NC (Teste)</Button>
         </div>
 
-         {/* --- O Dialog agora é renderizado separadamente e controlado pelo estado --- */}
+         {/* Dialog SIMPLIFICADO - Sem o formulário complexo */}
          <Dialog open={isAddNcDialogOpen} onOpenChange={setIsAddNcDialogOpen}>
-            {/* Não precisamos mais do DialogTrigger aqui */}
-            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-                <DialogHeader> <DialogTitle>Cadastrar Nova Nota de Crédito</DialogTitle> <DialogDescription> Preencha os dados da NC recebida. </DialogDescription> </DialogHeader>
-                <AddNcForm onSuccess={handleNcAdded} onCancel={() => setIsAddNcDialogOpen(false)} />
+            <DialogContent className="sm:max-w-[425px]"> {/* Largura menor para teste */}
+                <DialogHeader>
+                    <DialogTitle>Teste Dialog</DialogTitle>
+                    <DialogDescription>
+                        Se isto aparecer sem erro no console, o problema está no AddNcForm.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                    <p>Conteúdo simples do modal.</p>
+                </div>
+                {/* Botão para fechar manualmente */}
+                 <Button variant="outline" onClick={() => setIsAddNcDialogOpen(false)}>Fechar</Button>
             </DialogContent>
         </Dialog>
-         {/* ---------------------------------------------------------------------- */}
 
-        {/* Tabela (lógica inalterada) */}
-        {loadingNCs && (<div className="space-y-2"> <Skeleton className="h-10 w-full" /> <Skeleton className="h-10 w-full" /> <Skeleton className="h-10 w-full" /> </div>)}
-        {!loadingNCs && errorNCs && (<p className="text-center text-red-600">{errorNCs}</p>)}
-        {!loadingNCs && !errorNCs && notasCredito.length === 0 && (<p className="text-center text-muted-foreground">Nenhuma Nota de Crédito encontrada.</p>)}
-        {!loadingNCs && !errorNCs && notasCredito.length > 0 && (
-          <div className="rounded-md border">
-            <Table>
-              <TableCaption>Lista das últimas notas de crédito recebidas.</TableCaption>
-              <TableHeader> <TableRow> <TableHead className="w-[150px]">Número NC</TableHead> <TableHead>Data Recepção</TableHead> <TableHead>PTRES</TableHead> <TableHead>ND</TableHead> <TableHead>Fonte</TableHead> <TableHead className="text-right">Valor Total</TableHead> <TableHead className="text-right font-semibold">Saldo Disponível</TableHead> </TableRow> </TableHeader>
-              <TableBody>
-                {notasCredito.map((nc) => (
-                  <TableRow key={nc.id}>
-                    <TableCell className="font-medium">{nc.numeronc}</TableCell>
-                    <TableCell>{nc.datarecepcao ? new Date(nc.datarecepcao + 'T00:00:00').toLocaleDateString('pt-BR') : '-'}</TableCell>
-                    <TableCell>{nc.ptres}</TableCell> <TableCell>{nc.naturezadespesa}</TableCell> <TableCell>{nc.fonterecurso}</TableCell>
-                    <TableCell className="text-right">{nc.valortotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
-                    <TableCell className="text-right font-semibold">{nc.saldodisponivel.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+        {/* Tabela e lógica de NC removidas temporariamente */}
+        <p className='text-muted-foreground mt-4'>Tabela de NCs desativada para teste.</p>
+
       </section>
     </div>
   );
