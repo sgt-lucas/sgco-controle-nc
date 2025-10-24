@@ -1,4 +1,4 @@
-// Caminho do arquivo: app/dashboard/page.tsx (Revisado para erro React.Children)
+// Caminho do arquivo: app/dashboard/page.tsx (Revisado novamente para erro React.Children)
 'use client'
 
 import { useState, useEffect, useCallback } from 'react';
@@ -14,7 +14,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
-// Importa o formulário com a validação SIMPLIFICADA
 import { AddNcForm } from "@/components/AddNcForm";
 
 // Tipo NotaCredito
@@ -85,7 +84,7 @@ export default function DashboardPage() {
         <div className="flex items-center gap-4">
             <Image
                 src="/logo-2cgeo.png" alt="Distintivo 2º CGEO"
-                width={40} height={50} // Ajuste conforme necessário
+                width={40} height={50}
                 priority
             />
             <div>
@@ -99,13 +98,12 @@ export default function DashboardPage() {
       <section>
         <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-medium">Notas de Crédito Recebidas</h2>
-             {/* --- Verifique esta estrutura cuidadosamente --- */}
+             {/* --- Garanta que esta estrutura está limpa --- */}
              <Dialog open={isAddNcDialogOpen} onOpenChange={setIsAddNcDialogOpen}>
                 <DialogTrigger asChild>
-                    {/* Deve haver APENAS este <Button> aqui dentro */}
+                    {/* Linha ÚNICA entre <DialogTrigger> e </DialogTrigger> */}
                     <Button size="sm">Adicionar NC</Button>
                 </DialogTrigger>
-                {/* O DialogContent vem DEPOIS do Trigger */}
                 <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader> <DialogTitle>Cadastrar Nova Nota de Crédito</DialogTitle> <DialogDescription> Preencha os dados da NC recebida. </DialogDescription> </DialogHeader>
                     <AddNcForm onSuccess={handleNcAdded} onCancel={() => setIsAddNcDialogOpen(false)} />
@@ -114,7 +112,7 @@ export default function DashboardPage() {
              {/* ------------------------------------------- */}
         </div>
 
-        {/* Tabela (lógica inalterada) */}
+        {/* Tabela */}
         {loadingNCs && (<div className="space-y-2"> <Skeleton className="h-10 w-full" /> <Skeleton className="h-10 w-full" /> <Skeleton className="h-10 w-full" /> </div>)}
         {!loadingNCs && errorNCs && (<p className="text-center text-red-600">{errorNCs}</p>)}
         {!loadingNCs && !errorNCs && notasCredito.length === 0 && (<p className="text-center text-muted-foreground">Nenhuma Nota de Crédito encontrada.</p>)}
