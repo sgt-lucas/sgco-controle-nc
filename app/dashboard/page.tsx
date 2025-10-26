@@ -1,171 +1,156 @@
-// Caminho: components/AddNcForm.tsx (Reconstruído sem shadcn Form/FormField)
-'use client';
+// Caminho do arquivo: app/dashboard/page.tsx (CORRIGIDO - Modal Manual com Tailwind)
+'use client'
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, SubmitHandler } from "react-hook-form"; // Importa SubmitHandler
-import { z } from "zod";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { createClient } from '@/lib/supabase/client';
 
-// Importa apenas os componentes visuais necessários do shadcn/ui
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-// Não importamos mais Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage
+import {
+  Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+// NÃO importamos Dialog
+import { AddNcForm } from "@/components/AddNcForm"; // Importa o formulário correto
 
-import { createClient } from "@/lib/supabase/client";
-
-// --- Schema SIMPLIFICADO (valortotal como string não vazia) ---
-// Este schema passou no build anteriormente
-const formSchema = z.object({
-  numeronc: z.string().min(5, { message: "Número da NC é obrigatório." }),
-  datarecepcao: z.string().refine((date) => !isNaN(Date.parse(date)), { message: "Data inválida."}),
-  ug_gestora: z.string().length(6, { message: "UG Gestora deve ter 6 dígitos." }),
-  ug_favorecida: z.string().length(6, { message: "UG Favorecida deve ter 6 dígitos." }),
-  ptres: z.string().min(1, { message: "PTRES é obrigatório."}),
-  naturezadespesa: z.string().min(6, { message: "ND é obrigatória."}),
-  fonterecurso: z.string().min(1, { message: "Fonte é obrigatória."}),
-  pi: z.string().optional(),
-  valortotal: z.string()
-      .min(1, { message: "Valor total é obrigatório."})
-      .refine((val) => /^\d+([.,]\d{1,2})?$/.test(val), { // Aceita vírgula ou ponto
-          message: "Valor inválido (use ponto ou vírgula para decimais).",
-      }),
-  datavalidade: z.string().refine((date) => date === "" || !isNaN(Date.parse(date)), { message: "Data inválida."}).optional().or(z.literal('')),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-type AddNcFormProps = {
-  onSuccess: () => void;
-  onCancel: () => void;
+// Tipo NotaCredito
+type NotaCredito = {
+  id: number; numeronc: string; datarecepcao: string; ptres: string;
+  naturezadespesa: string; fonterecurso: string; pi: string | null;
+  valortotal: number; saldodisponivel: number; datavalidade: string | null;
 };
 
-export function AddNcForm({ onSuccess, onCancel }: AddNcFormProps) {
+export default function DashboardPage() { // <--- EXPORTAÇÃO PADRÃO (Correto)
+  const router = useRouter();
   const supabase = createClient();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Configuração do react-hook-form (sem shadcn Form)
-  const { register, handleSubmit, formState: { errors }, setError } = useForm<FormValues>({
-    resolver: zodResolver(formSchema), // Continua a usar Zod para validação
-    defaultValues: {
-      numeronc: "", datarecepcao: new Date().toISOString().split('T')[0],
-      ug_gestora: "", ug_favorecida: "", ptres: "", naturezadespesa: "",
-      fonterecurso: "", pi: "", valortotal: "", datavalidade: "",
-    },
-  });
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [loadingNCs, setLoadingNCs] = useState(false);
+  const [notasCredito, setNotasCredito] = useState<NotaCredito[]>([]);
+  const [errorNCs, setErrorNCs] = useState<string | null>(null);
+  const [isAddNcModalOpen, setIsAddNcModalOpen] = useState(false);
 
-  // Função onSubmit agora usa SubmitHandler para tipagem correta
-  const onSubmit: SubmitHandler<FormValues> = async (values) => {
-    setIsSubmitting(true);
-    setSubmitError(null);
+  const fetchNotasCredito = useCallback(async () => {
+    setLoadingNCs(true);
+    setErrorNCs(null);
+    // Corrigindo a query para usar os nomes de coluna minúsculos corretos
+    const { data, error } = await supabase
+      .from('NotasCredito') // Use o nome exato da sua tabela
+      .select('id, numeronc, datarecepcao, ptres, naturezadespesa, fonterecurso, pi, valortotal, saldodisponivel, datavalidade')
+      .order('datarecepcao', { ascending: false });
 
-    // Conversão e Validação Manual do Valor (mantida da versão anterior)
-    const valorTotalString = values.valortotal.replace(',', '.');
-    const valorTotalNumber = parseFloat(valorTotalString);
-
-    if (isNaN(valorTotalNumber) || valorTotalNumber < 0) {
-        // Usa setError do react-hook-form para mostrar erro no campo
-        setError("valortotal", { type: "manual", message: "Valor inválido ou negativo." });
-        setIsSubmitting(false);
-        return;
+    if (error) {
+      console.error("Erro ao buscar Notas de Crédito:", error);
+      setErrorNCs(`Falha ao carregar dados: ${error.message}`);
+      setNotasCredito([]);
+    } else {
+       const dataTyped = data?.map(item => ({...item, valortotal: Number(item.valortotal), saldodisponivel: Number(item.saldodisponivel)})) || [];
+      setNotasCredito(dataTyped);
     }
+    setLoadingNCs(false);
+  }, [supabase]);
 
-    try {
-        const dataToInsert = {
-            numeronc: values.numeronc, datarecepcao: values.datarecepcao,
-            ug_gestora: values.ug_gestora, ug_favorecida: values.ug_favorecida,
-            ptres: values.ptres, naturezadespesa: values.naturezadespesa,
-            fonterecurso: values.fonterecurso,
-            pi: values.pi || null,
-            valortotal: valorTotalNumber, // Usa o número convertido
-            datavalidade: values.datavalidade || null,
-        };
-        console.log("Dados para inserir:", dataToInsert);
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { router.push('/'); }
+      else {
+        setUserEmail(session.user?.email ?? null);
+        setLoadingUser(false);
+        fetchNotasCredito();
+      }
+    };
+    checkUser();
+  }, [supabase, router, fetchNotasCredito]);
 
-        const { error } = await supabase.from("NotasCredito").insert([dataToInsert]);
-        if (error) throw error;
-
-        console.log("NC inserida com sucesso!");
-        onSuccess();
-
-    } catch (error: any) {
-        console.error("Erro ao inserir NC:", error);
-        setSubmitError(`Erro ao salvar: ${error.message || 'Erro desconhecido'}`);
-    } finally {
-        setIsSubmitting(false);
-    }
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
   };
 
-  // --- JSX usa <form> padrão e liga campos com register ---
+  // Funções de controlo do modal manual
+  const openAddNcModal = () => setIsAddNcModalOpen(true);
+  const closeAddNcModal = () => setIsAddNcModalOpen(false);
+
+  // Função chamada pelo AddNcForm em caso de sucesso
+  const handleNcAdded = () => {
+    closeAddNcModal(); // Fecha o modal manual
+    fetchNotasCredito(); // Rebusca os dados
+  };
+
+  if (loadingUser) { return ( <div className="flex h-screen items-center justify-center"><p>Verificando autenticação...</p></div> ); }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {/* Exemplo: Número NC */}
-      <div className="space-y-2">
-        <Label htmlFor="numeronc">Número da NC</Label>
-        <Input id="numeronc" placeholder="Ex: 2024NC001234" {...register("numeronc")} aria-invalid={errors.numeronc ? "true" : "false"}/>
-        {errors.numeronc && <p className="text-sm font-medium text-destructive">{errors.numeronc.message}</p>}
-      </div>
+    <div className="container relative mx-auto p-4 md:p-6 lg:p-8">
+      <header className="mb-6 flex items-center justify-between border-b pb-4">
+         <div className="flex items-center gap-4">
+             <Image src="/logo-2cgeo.png" alt="Distintivo 2º CGEO" width={40} height={50} priority />
+             <div>
+               <h1 className="text-xl font-semibold text-primary"> Painel de Controle - SALC </h1>
+               {userEmail && <span className="text-xs text-muted-foreground">Logado como: {userEmail.split('@')[0]}</span>}
+             </div>
+         </div>
+         <Button variant="outline" size="sm" onClick={handleLogout}> Sair </Button>
+      </header>
 
-      {/* Exemplo: Data Recepção */}
-      <div className="space-y-2">
-        <Label htmlFor="datarecepcao">Data de Recepção</Label>
-        <Input id="datarecepcao" type="date" {...register("datarecepcao")} aria-invalid={errors.datarecepcao ? "true" : "false"}/>
-        {errors.datarecepcao && <p className="text-sm font-medium text-destructive">{errors.datarecepcao.message}</p>}
-      </div>
-
-      {/* UGs */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-            <Label htmlFor="ug_gestora">UG Gestora</Label>
-            <Input id="ug_gestora" placeholder="6 dígitos" maxLength={6} {...register("ug_gestora")} aria-invalid={errors.ug_gestora ? "true" : "false"}/>
-            {errors.ug_gestora && <p className="text-sm font-medium text-destructive">{errors.ug_gestora.message}</p>}
-        </div>
-        <div className="space-y-2">
-            <Label htmlFor="ug_favorecida">UG Favorecida</Label>
-            <Input id="ug_favorecida" placeholder="6 dígitos" maxLength={6} {...register("ug_favorecida")} aria-invalid={errors.ug_favorecida ? "true" : "false"}/>
-            {errors.ug_favorecida && <p className="text-sm font-medium text-destructive">{errors.ug_favorecida.message}</p>}
-        </div>
-      </div>
-
-       {/* PTRES, ND, Fonte */}
-        <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2"> <Label htmlFor="ptres">PTRES</Label> <Input id="ptres" placeholder="Ex: 001001" {...register("ptres")} aria-invalid={errors.ptres ? "true" : "false"}/> {errors.ptres && <p className="text-sm font-medium text-destructive">{errors.ptres.message}</p>} </div>
-            <div className="space-y-2"> <Label htmlFor="naturezadespesa">Natureza Despesa</Label> <Input id="naturezadespesa" placeholder="Ex: 33903000" {...register("naturezadespesa")} aria-invalid={errors.naturezadespesa ? "true" : "false"}/> {errors.naturezadespesa && <p className="text-sm font-medium text-destructive">{errors.naturezadespesa.message}</p>} </div>
-            <div className="space-y-2"> <Label htmlFor="fonterecurso">Fonte Recurso</Label> <Input id="fonterecurso" placeholder="Ex: 0100" {...register("fonterecurso")} aria-invalid={errors.fonterecurso ? "true" : "false"}/> {errors.fonterecurso && <p className="text-sm font-medium text-destructive">{errors.fonterecurso.message}</p>} </div>
+      <section>
+        <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-xl font-medium">Notas de Crédito Recebidas</h2>
+             <Button size="sm" onClick={openAddNcModal}>Adicionar NC</Button>
         </div>
 
-      {/* PI */}
-      <div className="space-y-2">
-        <Label htmlFor="pi">Plano Interno (PI)</Label>
-        <Input id="pi" placeholder="Opcional" {...register("pi")} />
-        <p className="text-[0.8rem] text-muted-foreground">Se aplicável.</p>
-        {/* Não há erro Zod direto para campo opcional sem validação extra */}
-      </div>
+        {/* Tabela de NCs */}
+        {loadingNCs && (<div className="space-y-2"> <Skeleton className="h-10 w-full" /> <Skeleton className="h-10 w-full" /> <Skeleton className="h-10 w-full" /> </div>)}
+        {!loadingNCs && errorNCs && (<p className="text-center text-red-600">{errorNCs}</p>)}
+        {!loadingNCs && !errorNCs && notasCredito.length === 0 && (<p className="text-center text-muted-foreground">Nenhuma Nota de Crédito encontrada.</p>)}
+        {!loadingNCs && !errorNCs && notasCredito.length > 0 && (
+          <div className="rounded-md border">
+            <Table>
+              <TableCaption>Lista das últimas notas de crédito recebidas.</TableCaption>
+              <TableHeader> <TableRow> <TableHead className="w-[150px]">Número NC</TableHead> <TableHead>Data Recepção</TableHead> <TableHead>PTRES</TableHead> <TableHead>ND</TableHead> <TableHead>Fonte</TableHead> <TableHead className="text-right">Valor Total</TableHead> <TableHead className="text-right font-semibold">Saldo Disponível</TableHead> </TableRow> </TableHeader>
+              <TableBody>
+                {/* Corrigindo para nomes de coluna minúsculos */}
+                {notasCredito.map((nc) => (
+                  <TableRow key={nc.id}>
+                    <TableCell className="font-medium">{nc.numeronc}</TableCell>
+                    <TableCell>{nc.datarecepcao ? new Date(nc.datarecepcao + 'T00:00:00').toLocaleDateString('pt-BR') : '-'}</TableCell>
+                    <TableCell>{nc.ptres}</TableCell>
+                    <TableCell>{nc.naturezadespesa}</TableCell>
+                    <TableCell>{nc.fonterecurso}</TableCell>
+                    <TableCell className="text-right">{nc.valortotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
+                    <TableCell className="text-right font-semibold">{nc.saldodisponivel.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </section>
 
-      {/* Valor Total */}
-       <div className="space-y-2">
-        <Label htmlFor="valortotal">Valor Total (R$)</Label>
-        <Input id="valortotal" type="text" inputMode="decimal" placeholder="Ex: 1500.50 (use ponto ou vírgula)" {...register("valortotal")} aria-invalid={errors.valortotal ? "true" : "false"}/>
-        {errors.valortotal && <p className="text-sm font-medium text-destructive">{errors.valortotal.message}</p>}
-      </div>
-
-       {/* Data Validade */}
-       <div className="space-y-2">
-        <Label htmlFor="datavalidade">Data de Validade</Label>
-        <Input id="datavalidade" type="date" {...register("datavalidade")} aria-invalid={errors.datavalidade ? "true" : "false"}/>
-        <p className="text-[0.8rem] text-muted-foreground">Opcional.</p>
-        {errors.datavalidade && <p className="text-sm font-medium text-destructive">{errors.datavalidade.message}</p>}
-      </div>
-
-      {/* Mensagem de Erro Geral do Submit */}
-      {submitError && (<p className="text-sm font-medium text-destructive">{submitError}</p>)}
-
-      {/* Botões */}
-      <div className="flex justify-end gap-4 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}> Cancelar </Button>
-          <Button type="submit" disabled={isSubmitting}> {isSubmitting ? 'Salvando...' : 'Salvar Nota de Crédito'} </Button>
-      </div>
-    </form>
+      {/* --- Modal Manual com Tailwind --- */}
+      {isAddNcModalOpen && (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            onClick={closeAddNcModal}
+        >
+          <div
+            className="w-full max-w-xl rounded-lg bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+             <div className="mb-4 flex items-center justify-between border-b pb-3">
+                <h3 className="text-lg font-semibold text-gray-900">Cadastrar Nova Nota de Crédito</h3>
+                <Button variant="ghost" size="icon" onClick={closeAddNcModal} className="h-6 w-6 rounded-full p-0">
+                   <span className="text-gray-500 hover:text-gray-800">X</span>
+                </Button>
+             </div>
+             <p className="mb-4 text-sm text-gray-600">Preencha os dados da NC recebida.</p>
+             <AddNcForm onSuccess={handleNcAdded} onCancel={closeAddNcModal} />
+          </div>
+        </div>
+      )}
+      {/* ----------------------------- */}
+    </div>
   );
 }
