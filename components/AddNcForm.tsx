@@ -42,7 +42,7 @@ const formSchema = z.object({
   pi: z.string().min(1, { message: "Plano Interno é obrigatório." }), // Tornou-se obrigatório
   valortotal: z.number({ required_error: "Valor é obrigatório.", invalid_type_error: "Valor inválido."})
     .positive({ message: "Valor deve ser positivo." }),
-  datavalidade: z.date({ required_error: "Data de validade é obrigatória.", invalid_type_error: "Data inválida."}), // Tornou-se obrigatório (não aceita null)
+    datavalidade: z.date({ required_error: 'A data é obrigatória.' }).nullable(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
