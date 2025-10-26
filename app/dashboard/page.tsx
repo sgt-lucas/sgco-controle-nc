@@ -1,4 +1,4 @@
-// Caminho: app/dashboard/page.tsx (Reescrito com Mantine UI)
+// Caminho: app/dashboard/page.tsx (CORRIGIDO com imports em falta)
 'use client'
 
 import { useState, useEffect, useCallback } from 'react';
@@ -7,25 +7,25 @@ import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 import { notifications } from '@mantine/notifications';
 
-// Importações Mantine
+// --- CORREÇÃO AQUI: Adicionado Center e Text ---
 import {
   Button,
   Title,
-  Text,
+  Text, // <--- Adicionado
   Table,
   Group,
   ScrollArea,
   Skeleton,
-  Modal, // Importa o Modal do Mantine
+  Modal,
   Box,
-  Anchor, // Para links futuros (ex: Detalhes)
+  Anchor,
+  Center, // <--- Adicionado
 } from '@mantine/core';
 import { IconCheck, IconX } from '@tabler/icons-react';
 
-// Importa o novo formulário Mantine
 import { AddNcForm } from '@/components/AddNcForm';
 
-// Tipo NotaCredito (Nomes de coluna minúsculos do DB)
+// Tipo NotaCredito
 type NotaCredito = {
   id: number;
   numeronc: string;
@@ -45,19 +45,16 @@ export default function DashboardPage() {
 
   const [loadingUser, setLoadingUser] = useState(true);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [loadingNCs, setLoadingNCs] = useState(true); // Começa true na primeira carga
+  const [loadingNCs, setLoadingNCs] = useState(true);
   const [notasCredito, setNotasCredito] = useState<NotaCredito[]>([]);
   const [errorNCs, setErrorNCs] = useState<string | null>(null);
-  
-  // Estado para controlar o Modal do Mantine
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false); // Renomeado
 
-  // Busca os dados
   const fetchNotasCredito = useCallback(async () => {
     setLoadingNCs(true);
     setErrorNCs(null);
     const { data, error } = await supabase
-      .from('NotasCredito') // Use o nome exato da sua tabela
+      .from('NotasCredito')
       .select('id, numeronc, datarecepcao, ptres, naturezadespesa, fonterecurso, pi, valortotal, saldodisponivel, datavalidade')
       .order('datarecepcao', { ascending: false });
 
@@ -73,7 +70,6 @@ export default function DashboardPage() {
     setLoadingNCs(false);
   }, [supabase]);
 
-  // Verifica o usuário
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -97,13 +93,14 @@ export default function DashboardPage() {
   const closeAddNcModal = () => setIsModalOpen(false);
 
   const handleNcAdded = () => {
-    closeAddNcModal(); // Fecha o modal
-    fetchNotasCredito(); // Rebusca os dados
+    closeAddNcModal();
+    fetchNotasCredito();
   };
 
   // ----- Renderização -----
 
   if (loadingUser) {
+    // Agora Center e Text são importados corretamente
     return (
         <Center style={{ height: '100vh' }}>
             <Text>Verificando autenticação...</Text>
@@ -115,7 +112,6 @@ export default function DashboardPage() {
   const rows = notasCredito.map((nc) => (
     <Table.Tr key={nc.id}>
       <Table.Td>
-          {/* Futuramente um link para detalhes */}
           <Anchor component="button" fz="sm">{nc.numeronc}</Anchor>
       </Table.Td>
       <Table.Td>{nc.datarecepcao ? new Date(nc.datarecepcao + 'T00:00:00').toLocaleDateString('pt-BR') : '-'}</Table.Td>
@@ -128,22 +124,19 @@ export default function DashboardPage() {
   ));
 
   return (
-    // Usa Box como container principal (similar ao div)
     <Box p="md">
-      {/* Modal para Adicionar NC (não dá erro pois usa o portal Mantine) */}
       <Modal
         opened={isModalOpen}
         onClose={closeAddNcModal}
         title="Cadastrar Nova Nota de Crédito"
-        size="xl" // Tamanho 'xl' (extra large)
-        scrollAreaComponent={ScrollArea.Autosize} // Permite scroll interno
+        size="xl"
+        scrollAreaComponent={ScrollArea.Autosize}
         centered
       >
         <AddNcForm onSuccess={handleNcAdded} onCancel={closeAddNcModal} />
       </Modal>
 
-      {/* Cabeçalho */}
-      <Group justify="space-between" mb="lg" pb="md" style={{ borderBottom: '1px solid var(--mantine-color-gray-3)' }}>
+      <header className="mb-6 flex items-center justify-between border-b pb-4">
         <Group gap="md">
             <Image src="/logo-2cgeo.png" alt="Distintivo 2º CGEO" width={40} height={50} priority />
             <Stack gap={0}>
@@ -152,16 +145,14 @@ export default function DashboardPage() {
             </Stack>
         </Group>
         <Button variant="outline" size="sm" onClick={handleLogout}> Sair </Button>
-      </Group>
+      </header>
 
-      {/* Seção Principal */}
       <section>
         <Group justify="space-between" mb="md">
             <Title order={4}>Notas de Crédito Recebidas</Title>
              <Button size="sm" onClick={openAddNcModal}>Adicionar NC</Button>
         </Group>
 
-        {/* Tabela de NCs */}
         <Paper withBorder shadow="sm" radius="md">
           <ScrollArea>
             <Table miw={800} verticalSpacing="sm" striped highlightOnHover>
@@ -178,7 +169,6 @@ export default function DashboardPage() {
               </Table.Thead>
               <Table.Tbody>
                 {loadingNCs && (
-                    // Skeleton (esqueleto) enquanto carrega
                     [...Array(3)].map((_, index) => (
                         <Table.Tr key={index}>
                             <Table.Td colSpan={7}><Skeleton height={20} radius="sm" /></Table.Td>
