@@ -1,12 +1,11 @@
-// Caminho do arquivo: tailwind.config.js
+// Caminho do arquivo: tailwind.config.js (CORRIGIDO)
 /** @type {import('tailwindcss').Config} */
 const config = {
   darkMode: ["class"],
   content: [
-    './pages/**/*.{js,ts,jsx,tsx}', // Adicionei .js e .jsx por segurança
+    './pages/**/*.{js,ts,jsx,tsx}',
     './components/**/*.{js,ts,jsx,tsx}',
     './app/**/*.{js,ts,jsx,tsx}',
-    // Removi a linha './src/**/...' pois você não usa a pasta src
   ],
   prefix: "",
   theme: {
@@ -74,9 +73,7 @@ const config = {
       },
     },
   },
-  /* eslint-disable @typescript-eslint/no-require-imports */
-  plugins: [require("tailwindcss-animate")], // Verifique se esta dependência está instalada
-  /* eslint-enable @typescript-eslint/no-require-imports */
+  plugins: [], // <-- CERTIFIQUE-SE QUE ESTÁ ASSIM
 }
 
 module.exports = config
