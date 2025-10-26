@@ -1,4 +1,4 @@
-// Caminho: app/dashboard/page.tsx (CORRIGIDO com imports em falta)
+// Caminho: app/dashboard/page.tsx (CORRIGIDO com import 'Stack')
 'use client'
 
 import { useState, useEffect, useCallback } from 'react';
@@ -7,11 +7,11 @@ import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 import { notifications } from '@mantine/notifications';
 
-// --- CORREÇÃO AQUI: Adicionado Center e Text ---
+// --- CORREÇÃO AQUI: Adicionado Stack ---
 import {
   Button,
   Title,
-  Text, // <--- Adicionado
+  Text,
   Table,
   Group,
   ScrollArea,
@@ -19,7 +19,9 @@ import {
   Modal,
   Box,
   Anchor,
-  Center, // <--- Adicionado
+  Center,
+  Paper,
+  Stack, // <--- Adicionado
 } from '@mantine/core';
 import { IconCheck, IconX } from '@tabler/icons-react';
 
@@ -48,7 +50,7 @@ export default function DashboardPage() {
   const [loadingNCs, setLoadingNCs] = useState(true);
   const [notasCredito, setNotasCredito] = useState<NotaCredito[]>([]);
   const [errorNCs, setErrorNCs] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false); // Renomeado
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchNotasCredito = useCallback(async () => {
     setLoadingNCs(true);
@@ -139,6 +141,7 @@ export default function DashboardPage() {
       <header className="mb-6 flex items-center justify-between border-b pb-4">
         <Group gap="md">
             <Image src="/logo-2cgeo.png" alt="Distintivo 2º CGEO" width={40} height={50} priority />
+            {/* Stack (agora importado) */}
             <Stack gap={0}>
               <Title order={3} c="green.6">Painel de Controle - SALC</Title>
               {userEmail && <Text size="xs" c="dimmed">Logado como: {userEmail.split('@')[0]}</Text>}
@@ -152,7 +155,7 @@ export default function DashboardPage() {
             <Title order={4}>Notas de Crédito Recebidas</Title>
              <Button size="sm" onClick={openAddNcModal}>Adicionar NC</Button>
         </Group>
-
+        
         <Paper withBorder shadow="sm" radius="md">
           <ScrollArea>
             <Table miw={800} verticalSpacing="sm" striped highlightOnHover>
