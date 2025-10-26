@@ -88,12 +88,50 @@ export default function DashboardPage() {
         {loadingNCs && (<div className="space-y-2"> <Skeleton className="h-10 w-full" /> <Skeleton className="h-10 w-full" /> <Skeleton className="h-10 w-full" /> </div>)}
         {!loadingNCs && errorNCs && (<p className="text-center text-red-600">{errorNCs}</p>)}
         {!loadingNCs && !errorNCs && notasCredito.length === 0 && (<p className="text-center text-muted-foreground">Nenhuma Nota de Crédito encontrada.</p>)}
-        {!loadingNCs && !errorNCs && notasCredito.length > 0 && ( <div className="rounded-md border"> {/* ... (Código da Tabela inalterado) ... */} <Table> <TableCaption>Lista das últimas notas de crédito recebidas.</TableCaption> <TableHeader> <TableRow> <TableHead className="w-[150px]">Número NC</TableHead> <TableHead>Data Recepção</TableHead> <TableHead>PTRES</TableHead> <TableHead>ND</TableHead> <TableHead>Fonte</TableHead> <TableHead className="text-right">Valor Total</TableHead> <TableHead className="text-right font-semibold">Saldo Disponível</TableHead> </TableRow> </TableHeader> <TableBody> {notasCredito.map((nc) => ( <TableRow key={nc.id}> <TableCell className="font-medium">{nc.numeronc}</TableCell> <TableCell>{nc.datarecepcao ? new Date(nc.datarecepcao + 'T00:00:00').toLocaleDateString('pt-BR') : '-'}</TableCell> <TableCell>{nc.ptres}</TableCell> <TableCell>{nc.naturezadespesa}</TableCell> <TableCell>{nc.fonterecurso}</TableCell> <TableCell className="text-right">{nc.valortotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell> <TableCell className="text-right font-semibold">{nc.saldodisponivel.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell> </TableRow> ))} </TableBody> </Table> </div> )}
+        {!loadingNCs && !errorNCs && notasCredito.length > 0 && (
+          <div className="rounded-md border">
+            <Table>
+              <TableCaption>Lista das últimas notas de crédito recebidas.</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[150px]">Número NC</TableHead>
+                  <TableHead>Data Recepção</TableHead>
+                  <TableHead>PTRES</TableHead>
+                  <TableHead>ND</TableHead>
+                  <TableHead>Fonte</TableHead>
+                  <TableHead className="text-right">Valor Total</TableHead>
+                  <TableHead className="text-right font-semibold">Saldo Disponível</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {notasCredito.map((nc) => (
+                  <TableRow key={nc.id}>
+                    <TableCell className="font-medium">{nc.numeronc}</TableCell>
+                    <TableCell>
+                      {nc.datarecepcao
+                        ? new Date(nc.datarecepcao + 'T00:00:00').toLocaleDateString('pt-BR')
+                        : '-'}
+                    </TableCell>
+                    <TableCell>{nc.ptres}</TableCell>
+                    <TableCell>{nc.naturezadespesa}</TableCell>
+                    <TableCell>{nc.fonterecurso}</TableCell>
+                    <TableCell className="text-right">
+                      {nc.valortotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">
+                      {nc.saldodisponivel.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </section>
 
-      {/* --- Modal Manual com Tailwind --- */}
-      {isAddNcModalOpen && (
-        // Overlay (fundo escuro)
+    </div>
+  );
+}fundo escuro)
         // Usa `fixed inset-0` para cobrir a tela, `z-50` para ficar acima, `flex items-center justify-center` para centrar
         // `bg-black/60 backdrop-blur-sm` para o efeito visual
         <div
