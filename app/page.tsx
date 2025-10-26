@@ -1,74 +1,125 @@
-// Caminho do arquivo: app/page.tsx (Com Logo)
+// Caminho do arquivo: app/page.tsx (Reescrito com Mantine UI)
 'use client'
 
-import { useState } from 'react'
-import Image from 'next/image' // Importa o componente Image
-import { createClient } from '@/lib/supabase/client'
+import { useState } from 'react';
+import Image from 'next/image';
+import { createClient } from '@/lib/supabase/client';
 
-import { Button } from "@/components/ui/button"
+// Importações do Mantine UI
 import {
-  Card, CardContent, CardDescription, CardHeader, CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+    TextInput,
+    PasswordInput,
+    Button,
+    Paper, // Similar ao Card, para agrupar o formulário
+    Title,
+    Text,
+    Stack, // Para empilhar elementos verticalmente
+    Center, // Para centralizar na página
+    Alert, // Para exibir mensagens de erro/sucesso
+    Loader, // Para indicar carregamento
+} from '@mantine/core';
+import { IconAlertCircle, IconCheck } from '@tabler/icons-react'; // Ícones opcionais para Alertas
 
-const DOMAIN_SUFFIX = '@salc.com';
+const DOMAIN_SUFFIX = '@salc.com'; // Mantém o sufixo
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const supabase = createClient()
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSignIn = async (e: React.FormEvent) => { /* ... (lógica de login inalterada) ... */
-    e.preventDefault()
-    setError(null)
-    setMessage(null)
-    setLoading(true)
+  const supabase = createClient();
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setMessage(null);
+    setLoading(true);
     const emailWithSuffix = `${username}${DOMAIN_SUFFIX}`;
-    const { error } = await supabase.auth.signInWithPassword({
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
       email: emailWithSuffix,
       password: password,
-    })
-    if (error) {
-      setError('Usuário ou senha inválidos.')
-      console.error("Erro de login:", error.message)
+    });
+
+    if (signInError) {
+      setError('Usuário ou senha inválidos.');
+      console.error("Erro de login:", signInError.message);
     } else {
-      setMessage('Login bem-sucedido! Redirecionando...')
-      window.location.href = '/dashboard'
+      setMessage('Login bem-sucedido! Redirecionando...');
+      // Pequeno delay para o utilizador ver a mensagem antes de redirecionar
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 1000);
     }
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-4">
-       <div className="mb-8">
-            <Image
-                src="/logo-2cgeo.png" // Caminho relativo à pasta /public
-                alt="Distintivo 2º CGEO"
-                width={120} height={150} // Ajuste conforme necessário
-                priority
-            />
-       </div>
-      <Card className="w-full max-w-md shadow-xl">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold"> 2º CENTRO DE GEOINFORMAÇÃO </CardTitle>
-          <CardDescription> Controle Orçamentário - SALC </CardDescription>
-        </CardHeader>
-        <CardContent>
+    // Usa Center para centralizar o conteúdo vertical e horizontalmente
+    <Center style={{ minHeight: 'calc(100vh - 60px)' }}> {/* Ajusta altura para descontar possível header/footer */}
+      <Stack align="center" gap="xl"> {/* Empilha logo e Paper */}
+        {/* Logo */}
+        <Image
+            src="/logo-2cgeo.png"
+            alt="Distintivo 2º CGEO"
+            width={100} // Tamanho ligeiramente menor
+            height={125} // Ajuste a altura proporcionalmente
+            priority
+        />
+
+        {/* Paper contém o formulário */}
+        <Paper withBorder shadow="md" p="xl" radius="md" w={400}> {/* w={400} define largura fixa */}
+          <Title order={2} ta="center" mb="sm">
+            2º CENTRO DE GEOINFORMAÇÃO
+          </Title>
+          <Text c="dimmed" size="sm" ta="center" mb="lg">
+            Controle Orçamentário - SALC
+          </Text>
+
           <form onSubmit={handleSignIn}>
-            <div className="grid w-full items-center gap-4">
-              <div className="flex flex-col space-y-1.5"> <Label htmlFor="username">Usuário</Label> <Input id="username" type="text" placeholder="Seu nome de usuário" value={username} onChange={(e) => setUsername(e.target.value)} onKeyDown={(e) => { if (e.key === '@') e.preventDefault(); }} required /> </div>
-              <div className="flex flex-col space-y-1.5"> <Label htmlFor="password">Senha</Label> <Input id="password" type="password" placeholder="Sua senha" value={password} onChange={(e) => setPassword(e.target.value)} required /> </div>
-              {error && (<div className="rounded-md border border-red-300 bg-red-50 p-3 text-center text-sm text-red-700"> {error} </div>)}
-              {message && (<div className="rounded-md border border-green-300 bg-green-50 p-3 text-center text-sm text-green-700"> {message} </div>)}
-              <Button type="submit" className="w-full" disabled={loading}> {loading ? 'Entrando...' : 'Entrar'} </Button>
-            </div>
+            <Stack gap="md"> {/* Empilha os campos do formulário */}
+              <TextInput
+                required
+                label="Usuário"
+                placeholder="Seu nome de usuário"
+                value={username}
+                onChange={(event) => setUsername(event.currentTarget.value)}
+                error={error ? ' ' : undefined} // Mostra espaço para erro geral abaixo
+                onKeyDown={(e) => { if (e.key === '@') e.preventDefault(); }} // Impede @
+              />
+
+              <PasswordInput
+                required
+                label="Senha"
+                placeholder="Sua senha"
+                value={password}
+                onChange={(event) => setPassword(event.currentTarget.value)}
+                error={error ? ' ' : undefined} // Mostra espaço para erro geral abaixo
+              />
+
+              {/* Exibe mensagem de erro geral */}
+              {error && (
+                 <Alert variant="light" color="red" title="Erro no Login" icon={<IconAlertCircle size={16} />} withCloseButton onClose={() => setError(null)}>
+                   {error}
+                 </Alert>
+              )}
+
+               {/* Exibe mensagem de sucesso */}
+              {message && (
+                 <Alert variant="light" color="green" title="Sucesso" icon={<IconCheck size={16} />}>
+                   {message}
+                 </Alert>
+              )}
+
+              <Button type="submit" fullWidth mt="xl" loading={loading} loaderProps={{ type: 'dots' }}>
+                Entrar
+              </Button>
+            </Stack>
           </form>
-        </CardContent>
-      </Card>
-    </div>
-  )
+        </Paper>
+      </Stack>
+    </Center>
+  );
 }
