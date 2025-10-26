@@ -70,7 +70,7 @@ export function AddNcForm({ onSuccess, onCancel }: AddNcFormProps) {
       fonterecurso: '',
       pi: '', // Obrigatório, mas começa vazio
       valortotal: 0,
-      datavalidade: null as Date | null, // Começa nulo, mas validação exigirá uma data
+      datavalidade: new Date(), // Começa nulo, mas validação exigirá uma data
     },
   });
 
