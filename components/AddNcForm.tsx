@@ -1,7 +1,11 @@
-// Caminho: components/AddNcForm.tsx (Versão Mantine UI)
+// Caminho: components/AddNcForm.tsx (Atualizado com Novas Validações)
 'use client';
 
-import { useForm, zodResolver } from '@mantine/form';
+import { zodResolver } from '@mantine/form';
+import { useForm } from '@mantine/form'; // Usar o useForm do Mantine
+import { z } from "zod";
+import { useState } from "react";
+
 import {
   TextInput,
   NumberInput,
@@ -12,74 +16,86 @@ import {
   Grid,
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
-import { z } from 'zod';
-import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { notifications } from '@mantine/notifications';
 import { IconAlertCircle, IconCheck } from '@tabler/icons-react';
 
-// Schema de validação Zod (compatível com Mantine Form)
-// Nota: Usamos 'string' para valortotal e 'date' para datas
+// --- Schema Atualizado ---
 const formSchema = z.object({
-  numeronc: z.string().min(5, { message: "Número da NC é obrigatório." }),
-  datarecepcao: z.date({ required_error: "Data de recepção é obrigatória." }),
-  ug_gestora: z.string().length(6, { message: "UG Gestora deve ter 6 dígitos." }),
-  ug_favorecida: z.string().length(6, { message: "UG Favorecida deve ter 6 dígitos." }),
-  ptres: z.string().min(1, { message: "PTRES é obrigatório." }),
-  naturezadespesa: z.string().min(6, { message: "ND é obrigatória." }),
-  fonterecurso: z.string().min(1, { message: "Fonte é obrigatória." }),
-  pi: z.string().optional(),
-  // valortotal será tratado como número pelo NumberInput
-  valortotal: z.number().positive({ message: "Valor deve ser positivo." }),
-  datavalidade: z.date().nullable().optional(), // Permite data ou nulo
+  numeronc: z.string()
+    .min(1, "Número da NC é obrigatório.") // Mensagem genérica inicial
+    .regex(/^2025NC\d{6}$/, { message: "Formato inválido. Use 2025NC######." }),
+  datarecepcao: z.date({ required_error: "Data de recepção é obrigatória.", invalid_type_error: "Data inválida." }),
+  ug_gestora: z.string()
+    .min(1, "UG Gestora é obrigatória.")
+    .regex(/^\d{6}$/, { message: "UG Gestora deve ter 6 dígitos." }),
+  // ug_favorecida removido
+  ptres: z.string()
+    .min(1, "PTRES é obrigatório.")
+    .regex(/^\d{6}$/, { message: "PTRES deve ter 6 dígitos." }),
+  naturezadespesa: z.string()
+     .min(1, "ND é obrigatória.")
+     .regex(/^\d{6,}$/, { message: "ND deve ter no mínimo 6 dígitos." }), // Ajustado para aceitar 6 ou mais, como 33903000
+  fonterecurso: z.string()
+    .min(1, "Fonte é obrigatória.")
+    .regex(/^\d{1,10}$/, { message: "Fonte deve ter até 10 dígitos." }), // Ajustado para até 10 dígitos
+  pi: z.string().min(1, { message: "Plano Interno é obrigatório." }), // Tornou-se obrigatório
+  valortotal: z.number({ required_error: "Valor é obrigatório.", invalid_type_error: "Valor inválido."})
+    .positive({ message: "Valor deve ser positivo." }),
+  datavalidade: z.date({ required_error: "Data de validade é obrigatória.", invalid_type_error: "Data inválida."}), // Tornou-se obrigatório (não aceita null)
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 type AddNcFormProps = {
-  onSuccess: () => void; // Função para fechar o modal e atualizar a tabela
+  onSuccess: () => void;
   onCancel: () => void;
 };
 
 export function AddNcForm({ onSuccess, onCancel }: AddNcFormProps) {
   const supabase = createClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  // Removido submitError, pois @mantine/form mostra erros nos campos
 
-  // 1. Configuração do @mantine/form
+  // Usa @mantine/form
   const form = useForm<FormValues>({
     validate: zodResolver(formSchema),
     initialValues: {
       numeronc: '',
-      datarecepcao: new Date(), // Padrão para hoje
+      datarecepcao: new Date(),
       ug_gestora: '',
-      ug_favorecida: '',
+      // ug_favorecida removido
       ptres: '',
       naturezadespesa: '',
       fonterecurso: '',
-      pi: '',
+      pi: '', // Obrigatório, mas começa vazio
       valortotal: 0,
-      datavalidade: null,
+      datavalidade: null as Date | null, // Começa nulo, mas validação exigirá uma data
     },
   });
 
-  // 2. Função de submit
   const handleSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
-    setSubmitError(null);
+
+    // O Zod já garante que datavalidade não é null aqui se a validação passou
+    // Mas adicionamos uma verificação extra por segurança de tipos
+    if (!values.datavalidade) {
+        form.setFieldError('datavalidade', 'Data de validade é obrigatória.');
+        setIsSubmitting(false);
+        return;
+    }
 
     const dataToInsert = {
       numeronc: values.numeronc,
-      // Formata a data para string YYYY-MM-DD (compatível com PostgreSQL)
       datarecepcao: values.datarecepcao.toISOString().split('T')[0],
       ug_gestora: values.ug_gestora,
-      ug_favorecida: values.ug_favorecida,
+      // ug_favorecida removido
       ptres: values.ptres,
       naturezadespesa: values.naturezadespesa,
       fonterecurso: values.fonterecurso,
-      pi: values.pi || null,
-      valortotal: values.valortotal, // Já é um número
-      datavalidade: values.datavalidade?.toISOString().split('T')[0] || null,
+      pi: values.pi, // Já é string e obrigatório
+      valortotal: values.valortotal,
+      datavalidade: values.datavalidade.toISOString().split('T')[0], // Converte para string
     };
 
     console.log("Dados para inserir:", dataToInsert);
@@ -94,68 +110,60 @@ export function AddNcForm({ onSuccess, onCancel }: AddNcFormProps) {
         color: 'green',
         icon: <IconCheck size={16} />,
       });
-      onSuccess(); // Fecha o modal e atualiza a tabela
+      form.reset(); // Limpa o formulário após sucesso
+      onSuccess();
 
     } catch (error: any) {
       console.error("Erro ao inserir NC:", error);
-      setSubmitError(`Erro ao salvar: ${error.message || 'Erro desconhecido'}`);
+      notifications.show({
+          title: 'Erro ao Salvar!',
+          message: `Não foi possível salvar a NC: ${error.message}`,
+          color: 'red',
+          icon: <IconAlertCircle size={16} />,
+        });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    // Usa form nativo com onSubmit do Mantine
     <form onSubmit={form.onSubmit(handleSubmit)}>
       <Stack gap="md">
-        {/* Usamos Grid para layout responsivo */}
-        <Grid>
-          <Grid.Col span={{ base: 12, md: 7 }}>
-            <TextInput
-              required
-              label="Número da NC"
-              placeholder="Ex: 2024NC001234"
-              {...form.getInputProps('numeronc')}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, md: 5 }}>
-            <DateInput
-              required
-              label="Data de Recepção"
-              valueFormat="DD/MM/YYYY"
-              placeholder="DD/MM/AAAA"
-              {...form.getInputProps('datarecepcao')}
-            />
-          </Grid.Col>
-        </Grid>
+        {/* Número NC */}
+        <TextInput
+          required
+          label="Número da NC"
+          placeholder="2025NC######"
+          {...form.getInputProps('numeronc')}
+        />
 
-        <Grid>
-          <Grid.Col span={{ base: 12, md: 6 }}>
-            <TextInput
-              required
-              label="UG Gestora"
-              placeholder="6 dígitos"
-              maxLength={6}
-              {...form.getInputProps('ug_gestora')}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, md: 6 }}>
-            <TextInput
-              required
-              label="UG Favorecida"
-              placeholder="6 dígitos"
-              maxLength={6}
-              {...form.getInputProps('ug_favorecida')}
-            />
-          </Grid.Col>
-        </Grid>
+        {/* Data Recepção */}
+        <DateInput
+          required
+          label="Data de Recepção"
+          valueFormat="DD/MM/YYYY"
+          placeholder="DD/MM/AAAA"
+          {...form.getInputProps('datarecepcao')}
+        />
 
+        {/* UG Gestora */}
+        <TextInput
+          required
+          label="UG Gestora"
+          placeholder="6 dígitos numéricos"
+          maxLength={6}
+          {...form.getInputProps('ug_gestora')}
+        />
+        {/* UG Favorecida Removido */}
+
+        {/* PTRES, ND, Fonte */}
         <Grid>
           <Grid.Col span={{ base: 12, md: 4 }}>
             <TextInput
               required
               label="PTRES"
-              placeholder="Ex: 001001"
+              placeholder="6 dígitos numéricos"
+              maxLength={6}
               {...form.getInputProps('ptres')}
             />
           </Grid.Col>
@@ -163,7 +171,8 @@ export function AddNcForm({ onSuccess, onCancel }: AddNcFormProps) {
             <TextInput
               required
               label="Natureza Despesa (ND)"
-              placeholder="Ex: 33903000"
+              placeholder="Ex: 339030"
+              maxLength={8} // Permite subelemento se necessário, mas valida 6+
               {...form.getInputProps('naturezadespesa')}
             />
           </Grid.Col>
@@ -171,18 +180,22 @@ export function AddNcForm({ onSuccess, onCancel }: AddNcFormProps) {
             <TextInput
               required
               label="Fonte Recurso"
-              placeholder="Ex: 0100"
+              placeholder="Até 10 dígitos numéricos"
+              maxLength={10}
               {...form.getInputProps('fonterecurso')}
             />
           </Grid.Col>
         </Grid>
 
+        {/* PI (Plano Interno) - Agora obrigatório */}
         <TextInput
+          required
           label="Plano Interno (PI)"
-          placeholder="Opcional"
+          placeholder="Digite o Plano Interno"
           {...form.getInputProps('pi')}
         />
         
+        {/* Valor Total e Data Validade */}
         <Grid>
           <Grid.Col span={{ base: 12, md: 6 }}>
              <NumberInput
@@ -191,27 +204,26 @@ export function AddNcForm({ onSuccess, onCancel }: AddNcFormProps) {
               placeholder="1500.50"
               decimalScale={2}
               fixedDecimalScale
-              min={0.01}
+              min={0.01} // Garante positivo
               {...form.getInputProps('valortotal')}
             />
           </Grid.Col>
            <Grid.Col span={{ base: 12, md: 6 }}>
+             {/* Data Validade - Agora obrigatória */}
              <DateInput
-              label="Data de Validade (Opcional)"
+              required
+              label="Data de Validade"
               valueFormat="DD/MM/YYYY"
               placeholder="DD/MM/AAAA"
-              clearable // Permite limpar o campo
+              clearable={false} // Não pode ser limpo pois é obrigatório
               {...form.getInputProps('datavalidade')}
             />
           </Grid.Col>
         </Grid>
 
-        {submitError && (
-          <Alert color="red" title="Erro ao Salvar" icon={<IconAlertCircle size={16} />} withCloseButton onClose={() => setSubmitError(null)}>
-            {submitError}
-          </Alert>
-        )}
+        {/* Erro geral de submit não é mais necessário aqui */}
 
+        {/* Botões */}
         <Group justify="flex-end" mt="md">
           <Button variant="default" onClick={onCancel} disabled={isSubmitting}>
             Cancelar
