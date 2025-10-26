@@ -11,8 +11,8 @@ import {
   Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-// NÃO importamos Dialog
-import { AddNcForm } from "@/components/AddNcForm"; // Importa o formulário correto
+// Importa o formulário do local CORRETO
+import { AddNcForm } from "@/components/AddNcForm";
 
 // Tipo NotaCredito
 type NotaCredito = {
@@ -21,7 +21,8 @@ type NotaCredito = {
   valortotal: number; saldodisponivel: number; datavalidade: string | null;
 };
 
-export default function DashboardPage() { // <--- EXPORTAÇÃO PADRÃO (Correto)
+// Exportação PADRÃO para a página (Correto)
+export default function DashboardPage() {
   const router = useRouter();
   const supabase = createClient();
 
@@ -83,6 +84,7 @@ export default function DashboardPage() { // <--- EXPORTAÇÃO PADRÃO (Correto)
   if (loadingUser) { return ( <div className="flex h-screen items-center justify-center"><p>Verificando autenticação...</p></div> ); }
 
   return (
+    // Adiciona `relative` para o posicionamento do modal
     <div className="container relative mx-auto p-4 md:p-6 lg:p-8">
       <header className="mb-6 flex items-center justify-between border-b pb-4">
          <div className="flex items-center gap-4">
@@ -146,6 +148,7 @@ export default function DashboardPage() { // <--- EXPORTAÇÃO PADRÃO (Correto)
                 </Button>
              </div>
              <p className="mb-4 text-sm text-gray-600">Preencha os dados da NC recebida.</p>
+             {/* Importa e usa o AddNcForm correto */}
              <AddNcForm onSuccess={handleNcAdded} onCancel={closeAddNcModal} />
           </div>
         </div>
