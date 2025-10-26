@@ -131,4 +131,4 @@ export default function DashboardPage() {
   );
 }                    <TableCell className="text-right font-semibold">{nc.saldodisponivel.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
                   </TableRow>
-                ))}
+                ))} 
